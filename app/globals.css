@@ -1,0 +1,11 @@
+body {
+  margin: 0;
+}
+
+.fc-event {
+  cursor: pointer;
+}
+
+.fc-daygrid-day-frame:hover {
+  background-color: rgb(250, 250, 250);
+}

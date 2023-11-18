@@ -1,0 +1,78 @@
+TODO:
+  flesh out recurrence a little more?
+    WEEKDAYS only
+
+  make editable recurrence seelcetor use useEditable
+
+
+Bugs:
+  
+
+FUTURE: AFTER 1.0--------------------------------------------------------------------
+  currencyUsed and name are not required in DB. not sure if this matters?
+  
+
+  Info Panel
+    add cash today in info panel
+    SO FAR THIS MONTH YOU'VE SPENT XXX ON CCs and paid XX about. 
+    PREVIOUS MONTH REPORT
+
+  mobile view
+    Graph enhancements
+    calendar dots for days when mobile (with dialog or route to day view)
+
+  Chart
+    Fixed expense or income on chart
+    chart animations and colors
+    user added "Danger zone". Graph will turn red below 10% or whatever they set
+
+  Auto-savings as percent of income
+
+  Accounts Feature
+    add different accounts (CC, etc)
+    user choose colors for each account (cash, cc, etc)
+    alert if CC payments in month are less than total CC expenses in last month
+
+  Calendar
+    tool tips
+    calendar & graph tool tips - make same?
+    CTRL-drag to copy events
+
+  Settings 
+    validate email address on submit
+
+
+
+  mark transactions as fixed income/expense and graph separate line
+
+  make date picker a month picker again (month doesn't work on safari or firefox)
+
+  use hidden input as core of recurrencesuslector
+
+  if Registration isnt finished, delete account and logout user
+
+  Change user picture in settings and on Registration
+
+
+  Bugs:
+    chart triangle on right side when refreshed (Line doesn't go all the way to right)
+    Mobile invalid date on chart tooltips (first few days of month) (MIGHT BE FIXED????)
+    after add recurrence, dialog flashes
+    for amount, if it goes negative, then you click income, it will no flip positive (and vice versa)
+    editableinputfield error state and helper text does not go away after edit is cancelled
+
+Version 0.4?
+  basic app-1
+  Mui-1
+  Auth-1
+  recurring-1
+
+  After alpha
+  accessibility-1
+  Plaid or similar to download transactions - 1
+
+
+
+
+
+
