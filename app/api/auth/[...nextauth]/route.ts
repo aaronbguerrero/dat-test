@@ -6,7 +6,13 @@ import clientPromise from '../../../lib/database'
 import { ObjectId } from 'mongodb'
 
 export const AuthOptions: NextAuthOptions = {
-  adapter: MongoDBAdapter(clientPromise, { databaseName: 'userData' }),
+  adapter: MongoDBAdapter(
+    clientPromise, 
+    { 
+      collections: { Accounts: 'linkedUserAccounts' }, 
+      databaseName: 'userData',
+    },
+  ),
   callbacks: {
     jwt: async ({ token, trigger, session }) => {
       let property = ''
