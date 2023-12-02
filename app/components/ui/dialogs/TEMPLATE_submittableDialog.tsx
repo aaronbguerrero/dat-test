@@ -31,11 +31,16 @@ export function useTemplateDialog (onSubmit: () => Promise<boolean>) {
     console.log('CANCELLED')
   }
 
+  const handleOpen = () => {
+    //Add any data that needs to be passed in here
+    dialogHook.open()
+  }
+
   const dialogHook = useSubmittableDialog(handleSubmit, handleCancel)
 
   const dialogProps: TemplateDialogProps = {
     dialogProps: dialogHook,
-    open: dialogHook.open,
+    open: handleOpen,
   }
 
   return dialogProps
