@@ -11,7 +11,7 @@ import BasicToast, { useToast } from "../ui/toasts/basicToast"
 import type { MonthData } from "../../api/months/getMonthData/[slug]/route"
 import setupChartTooltips from "../../lib/setupChartTooltips"
 import { Transaction } from "../../api/transactions/getTransactions/[slug]/route"
-import { Box, Paper } from "@mui/material"
+import { Paper } from "@mui/material"
 import { useSession } from "next-auth/react"
 
 export default function Graph ({ month }: { month: string }) {

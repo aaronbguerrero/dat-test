@@ -86,7 +86,7 @@ export default function EditableInputField ({
 
   //TODO: Add back click away listener?
   return (
-    <form style={{ width: '100%'}}>
+    <form style={{ width: '100%' }}>
       {/* <ClickAwayListener onClickAway={onClickAway}> */}
         <InputField 
         id={id}
