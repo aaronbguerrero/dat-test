@@ -8,17 +8,19 @@ import { redirect } from 'next/navigation'
 import { Button, CardContent, CardHeader } from "@mui/material"
 import { ThemeProvider } from '@mui/material/styles'
 import { theme } from './components/ui/themes/baseTheme'
-import SignInDialog from "./components/ui/dialogs/signInDialog"
 import PageCard from "./components/ui/pageCard"
 import { MonetizationOnTwoTone } from "@mui/icons-material"
+import SignInDialog, { useSignInDialog } from "./components/ui/dialogs/signInDialog"
 
 export default function Home() {
   const { data: session, status: authStatus } = useSession()
 
+  const signInDialog = useSignInDialog()
+
   const [isSignInOpen, setIsSignInOpen] = useState(false)
 
   const handleOpenSignIn = () => {
-    setIsSignInOpen(true)
+    signInDialog.open()
   }
 
   const handleCloseSignIn = () => {
@@ -50,7 +52,8 @@ export default function Home() {
         </CardContent>
       </PageCard>
 
-      <SignInDialog open={isSignInOpen} onClose={handleCloseSignIn} />
+      {/* <SignInDialog open={isSignInOpen} onClose={handleCloseSignIn} /> */}
+      <SignInDialog {...signInDialog} />
     </ThemeProvider>
   )
 }

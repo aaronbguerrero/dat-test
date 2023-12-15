@@ -4,10 +4,7 @@ import FullCalendar from "@fullcalendar/react"
 import daygrid from "@fullcalendar/daygrid"
 import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction"
 import { EventClickArg, EventInput, EventChangeArg, EventContentArg, CalendarApi } from "@fullcalendar/core"
-import AddTransactionDialog from "./ui/dialogs/addTransactionDialog"
-import EditTransactionDialog from "./ui/dialogs/editTransactionDialog"
 import { useTheme } from "@mui/material/styles"
-import type { Transaction } from "../api/transactions/getTransactions/[slug]/route"
 import { Box, Paper, Typography } from "@mui/material"
 import Dinero from 'dinero.js'
 import RecurEditDialog, { useRecurEditDialog } from "./ui/dialogs/recurEditDialog"
@@ -15,6 +12,10 @@ import BasicToast, { useToast } from "./ui/toasts/basicToast"
 import MonthSelector from "./monthSelector"
 import toPrettyMonthString from "../lib/dates/toPrettyMonthString"
 import toBasicDateString from "../lib/dates/toBasicDateString"
+import AddTransactionDialog, { useAddTransactionDialog } from "./ui/dialogs/addTransactionDialog"
+import EditTransactionDialog, { useEditTransactionDialog } from "./ui/dialogs/editTransactionDialog"
+
+import type { Transaction } from '../types'
 
 type Props = { 
   month: string, 
@@ -31,6 +32,10 @@ export default function Calendar ({ month, setMonth }: Props) {
   
   //Get SWR mutate hook
   const { mutate } = useSWRConfig()
+
+  //Setup dialogs
+  const addTransactionDialog = useAddTransactionDialog(mutate)
+  const editTransactionDialog = useEditTransactionDialog(mutate)
   
   //Change calendar month based on input state
   const calendarRef = useRef<FullCalendar>(null)
@@ -43,32 +48,16 @@ export default function Calendar ({ month, setMonth }: Props) {
   }, [calendarApi, month])
   
   const [events, setEvents] = useState<EventInput[]>([])
-
-  //Dialogs and handlers
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false)
-  const [addDialogContent, setAddDialogContent] = useState<Date>()
-  const [editDialogContent, setEditDialogContent] = useState<Transaction>()
-  
-  const handleSetIsAddDialogOpen = (isOpen: boolean) => {
-    setIsAddDialogOpen(isOpen)
-  }
-  
-  const handleSetIsEditDialogOpen = (isOpen: boolean) => {
-    setIsEditDialogOpen(isOpen)
-  }
-  
+   
   //Click event handlers
   const handleDateClick = (clickedDate: DateClickArg) => {
     const date = clickedDate.date
     
-    setAddDialogContent(date)
-    setIsAddDialogOpen(true)
+    addTransactionDialog.open(date)
   }
   
   const handleEventClick = (event: EventClickArg) => {
-    setEditDialogContent(transactions?.find( transaction => transaction._id === event.event._def.publicId ))
-    setIsEditDialogOpen(true)
+    editTransactionDialog.open(transactions?.find( transaction => transaction._id === event.event._def.publicId))
   }
   
   const handleEventChange = (event: EventChangeArg) => {
@@ -170,12 +159,7 @@ export default function Calendar ({ month, setMonth }: Props) {
       const newEvents: EventInput[] = []
       
       transactions.forEach((transaction: Transaction) => {
-        //If the transaction (or it's main child) is in the active edit dialog, replace it with the latest
-        if (transaction._id === editDialogContent?._id) setEditDialogContent(transaction)
-        else if (transaction.recurrenceParentId === editDialogContent?._id && transaction.date === editDialogContent?.date) {
-          setEditDialogContent(transaction)
-        }
-
+        if (!transaction.amount.amount || !transaction.amount.currency) return
 
         //Create FullCalendar event
         const event: EventInput = {
@@ -192,7 +176,7 @@ export default function Calendar ({ month, setMonth }: Props) {
         else event.color = theme.palette.tertiary.main
 
         event.extendedProps = { 
-          //TODO: Stop from crashing if amount is wrong in DB
+          //TODO: Stop from crashing if amount is wrong in DB (in APIT?)
           amount: Dinero({ amount: transaction.amount.amount, currency: transaction.amount.currency }),
           ...transaction.isRecurring && { isRecurring: transaction.isRecurring },
           ...transaction.recurrenceParentId && { recurrenceParentId: transaction.recurrenceParentId, recurrenceFreq: transaction.recurrenceFreq },
@@ -205,7 +189,7 @@ export default function Calendar ({ month, setMonth }: Props) {
       //Push events to calendar
       setEvents(newEvents)
     }
-  }, [editDialogContent?.date, editDialogContent?._id, transactions, theme])
+  }, [transactions, theme])
   
   return (
     <Paper sx={{ height: '100%' }}>
@@ -248,27 +232,8 @@ export default function Calendar ({ month, setMonth }: Props) {
       timeZone='UTC'
       />
 
-      {addDialogContent ? 
-        <AddTransactionDialog 
-        isOpen={isAddDialogOpen} 
-        setIsOpen={handleSetIsAddDialogOpen} 
-        date={addDialogContent} 
-        mutate={mutate} 
-        /> 
-        : 
-        null
-      }
-      {editDialogContent ? 
-        <EditTransactionDialog 
-        isOpen={isEditDialogOpen} 
-        setIsOpen={handleSetIsEditDialogOpen} 
-        content={editDialogContent} 
-        mutate={mutate} 
-        /> 
-        :
-        null
-      }
-
+      <AddTransactionDialog {...addTransactionDialog} />
+      <EditTransactionDialog {...editTransactionDialog} />
       <RecurEditDialog {...recurEditDialog} />
       <BasicToast {...toast} />
     </Paper>

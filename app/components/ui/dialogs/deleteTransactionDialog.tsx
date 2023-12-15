@@ -7,12 +7,14 @@ import {
 import { ChangeEvent, useState } from "react"
 import SubmittableDialog, { SubmittableDialogProps, useSubmittableDialog } from "./submittableDialog"
 
-interface DeleteTransactionDialogProps { 
+import type { Transaction } from "../../../types"
+
+export interface DeleteTransactionDialogProps { 
   isRecurring?: boolean,
   dialogProps: SubmittableDialogProps,
   editType: 'single' | 'future' | 'all',
   setEditType: (editType: 'single' | 'future' | 'all') => void,
-  open: () => void,
+  open: (transaction: Transaction) => void,
 }
 
 export default function DeleteTransactionDialog ({ 
@@ -60,11 +62,12 @@ export default function DeleteTransactionDialog ({
   )
 }
 
-export function useDeleteTransactionDialog (onDelete: (editType: 'single' | 'future' | 'all') => Promise<boolean>) {
+export function useDeleteTransactionDialog (onDelete: (transaction: Transaction | undefined, editType: 'single' | 'future' | 'all') => Promise<boolean>) {
+  const [transaction, setTransaction] = useState<Transaction>()
   const [editType, setEditType] = useState<'single' | 'future' | 'all'>('single')
   
   const handleDelete = async () => {
-    const response = onDelete(editType)
+    const response = onDelete(transaction, editType)
     .then(response => {
       if (response === true) setEditType('single')
       return response
@@ -76,12 +79,17 @@ export function useDeleteTransactionDialog (onDelete: (editType: 'single' | 'fut
   }
 
   const dialogHook = useSubmittableDialog(handleDelete, handleCancel)
+  
+  const handleOpen = (transaction: Transaction) => {
+    if (transaction) setTransaction(transaction)
+    dialogHook.open()
+  }
 
   const dialogProps: DeleteTransactionDialogProps = {
     dialogProps: dialogHook,
     editType: editType,
     setEditType: setEditType,
-    open: dialogHook.open,
+    open: handleOpen,
   } 
 
   return dialogProps

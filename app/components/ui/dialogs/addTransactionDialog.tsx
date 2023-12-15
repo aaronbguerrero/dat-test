@@ -6,11 +6,11 @@ import {
   DialogContentText, 
   DialogTitle, 
   FormControlLabel, 
-  Switch, 
+  Switch,
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import toPrettyDateString from '../../../lib/dates/toPrettyDateString'
-import BaseDialog from './baseDialog'
+import BaseDialog, { BaseDialogProps, useDialog } from './baseDialog'
 import removeCurrencyFormat from '../../../lib/removeCurrencyFormat'
 import { Currency } from 'dinero.js'
 import { useSession } from 'next-auth/react'
@@ -27,9 +27,20 @@ import type { ScopedMutator } from 'swr/_internal'
 import SpinnerBackdrop from '../spinnerBackdrop'
 import currencySchema from '../../../schemas/currencySchema'
 
+export type AddTransactionDialogProps = {
+  dialogProps: BaseDialogProps,
+  date: Date, 
+  mutate: ScopedMutator,
+  open: (date: Date) => void,
+  close: () => void,
+}
+
 export default function AddTransactionDialog ({
-   isOpen, setIsOpen, date, mutate
-}: {isOpen: boolean, setIsOpen: (isOpen: boolean) => void, date: Date, mutate: ScopedMutator }) {
+  dialogProps,
+  date, 
+  mutate,
+  close,
+}: AddTransactionDialogProps) {
   const theme = useTheme()
 
   const toast = useToast()
@@ -44,7 +55,7 @@ export default function AddTransactionDialog ({
   }, [session])
 
   const handleClose = () => {
-    setIsOpen(false)
+    close()
     setTransactionType('expense')
     setIsRecurring(false)
     setRecurrence('')
@@ -116,9 +127,9 @@ export default function AddTransactionDialog ({
   return (
     <>
       <BaseDialog 
-      open={isOpen} 
-      onClose={handleClose}
-      borderColor={(transactionType === 'expense') ? theme.palette.tertiary.main : theme.palette.primary.main}>
+      borderColor={(transactionType === 'expense') ? theme.palette.tertiary.main : theme.palette.primary.main}
+      {...dialogProps}
+      >
         <SpinnerBackdrop isLoading={isLoading} />
         
         <DialogTitle>Create Transaction</DialogTitle>
@@ -192,4 +203,29 @@ export default function AddTransactionDialog ({
       <BasicToast {...toast} />
     </>
   )
+}
+
+export function useAddTransactionDialog (mutate: ScopedMutator) {
+  const dialogHook = useDialog()
+
+  const [date, setDate] = useState<Date>(new Date())
+
+  const handleOpen = (date: Date) => {
+    setDate(date)
+    dialogHook.open()
+  }
+
+  const handleClose = () => {
+    dialogHook.close()
+  }
+  
+  const dialogProps: AddTransactionDialogProps = {
+    dialogProps: dialogHook,
+    date: date,
+    mutate: mutate,
+    open: handleOpen,
+    close: handleClose,
+  }
+
+  return dialogProps
 }
