@@ -210,7 +210,7 @@ export function useEditTransactionDialog(mutate: ScopedMutator) {
   useEffect(() => {
     if (!session?.user) toast.open("Could not load user data, please refresh page.", 'error')
     else toast.close()
-  }, [session])
+  }, [session, toast])
 
   const [transaction, setTransaction] = useState<Transaction>()
 

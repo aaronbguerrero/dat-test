@@ -25,15 +25,20 @@ import BasicToast, { useToast } from '../toasts/basicToast'
 import InputField from '../formElements/inputField'
 import { z } from 'zod'
 import { CreateTwoTone } from '@mui/icons-material'
-import useSWR from 'swr'
 
 import type { ScopedMutator } from 'swr/_internal'
 import SpinnerBackdrop from '../spinnerBackdrop'
 import currencySchema from '../../../schemas/currencySchema'
-import AccountIcon from '../accountIcon'
 
-import type { Account } from '../../../types'
 import AccountSelector from '../formElements/accountSelector'
+
+export type AddTransactionDialogProps = {
+  dialogProps: BaseDialogProps,
+  date: Date, 
+  mutate: ScopedMutator,
+  open: (date: Date) => void,
+  close: () => void,
+}
 
 export default function AddTransactionDialog ({
   dialogProps,

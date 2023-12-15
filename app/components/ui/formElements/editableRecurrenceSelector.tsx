@@ -78,7 +78,7 @@ export default function EditableRecurrenceSelector ({
         setIsLoading(true)
         setIsEditable(false)
 
-        await handleSubmit(transaction, internalValue, id)
+        await onSubmit(transaction, internalValue, id)
         .then(response => {
           setIsLoading(false)
 
@@ -116,10 +116,6 @@ export default function EditableRecurrenceSelector ({
     }
 
     else return (false)
-  }
-
-  const handleSubmit = async (newValue: string, label: string) => {
-   return await onSubmit(transaction, newValue, label)
   }
 
   const onChange = (rule: string) => {

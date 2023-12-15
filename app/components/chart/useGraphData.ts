@@ -89,7 +89,7 @@ export default function useGraphData ( month: string, activeAccounts: string[] )
 
       setData(dataToGraph) 
     }
-  }, [accounts, activeAccounts, monthData, transactions])
+  }, [accounts, activeAccounts, error, month, monthData, theme.palette, transactions, xAxisLabels])
 
   return { data: data, error: error }
 }
