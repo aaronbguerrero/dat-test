@@ -26,7 +26,6 @@ export interface Account {
 
 export interface Transaction {
   readonly _id: string | ObjectId,
-  account: ObjectId,
   title: string,
   date: Date,
   allDay: boolean,
