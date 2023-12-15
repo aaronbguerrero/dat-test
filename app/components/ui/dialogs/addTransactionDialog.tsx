@@ -33,14 +33,7 @@ import currencySchema from '../../../schemas/currencySchema'
 import AccountIcon from '../accountIcon'
 
 import type { Account } from '../../../types'
-
-export type AddTransactionDialogProps = {
-  dialogProps: BaseDialogProps,
-  date: Date, 
-  mutate: ScopedMutator,
-  open: (date: Date) => void,
-  close: () => void,
-}
+import AccountSelector from '../formElements/accountSelector'
 
 export type AddTransactionDialogProps = {
   dialogProps: BaseDialogProps,
@@ -69,10 +62,7 @@ export default function AddTransactionDialog ({
     }
   }, [session])
 
-  //Get account data
-  const { data: accounts, error: accountsError } = useSWR<Account[]>(`/api/accounts/getAccounts`)
-  if (accountsError) toast.open("Sorry! There was a problem getting your account data. Please try again.", 'error')
-
+  
   const handleClose = () => {
     close()
     setTransactionType('expense')
@@ -189,27 +179,7 @@ export default function AddTransactionDialog ({
             required
             />
 
-            <InputField 
-            name='account'
-            fullWidth 
-            select 
-            label='Account'
-            >
-              {accounts?.map(account => {
-                return <MenuItem 
-                value={account._id.toString()}
-                key={account._id.toString()}
-                
-                >
-                  <ListItemIcon>
-                    <AccountIcon type={account.type} />
-                  </ListItemIcon>
-                  {account.title}
-                </MenuItem>
-              })}
-
-            </InputField>
-
+            <AccountSelector />
 
             <FormControlLabel 
             control={<Switch checked={isRecurring} color='secondary' />} 
