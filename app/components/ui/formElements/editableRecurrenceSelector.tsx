@@ -4,10 +4,10 @@ import RecurrenceSelector from "./recurrenceSelector"
 import EditButton from "../buttons/editButton"
 import RemoveButton from "../buttons/removeButton"
 import ConfirmationDialog, { useConfirmationDialog } from "../dialogs/confirmationDialog"
+import { Transaction } from "../../../types"
 
-import type { Transaction } from '../../../types'
-
-interface PropsWithoutInitialValue {
+interface PropsWithoutInitialValue { 
+  transaction: Transaction,
   onSubmit: (transaction: Transaction, newValue: string, label: string) => Promise<boolean>,
   onRemove?: (transaction: Transaction) => Promise<boolean>,
   label?: string,
@@ -15,7 +15,6 @@ interface PropsWithoutInitialValue {
   disabled?: boolean,
   editOnOpen?: boolean,
   id: string,
-  transaction: Transaction,
 }
 
 type PropsWithInitialValue = 
@@ -32,16 +31,16 @@ type Props = PropsWithoutInitialValue & PropsWithInitialValue
 
 
 export default function EditableRecurrenceSelector ({ 
+  transaction,
   value, 
   onSubmit, 
   onRemove, 
   label, 
   date, 
   isEditingFlag, 
-  disabled, 
+  disabled,
   editOnOpen, 
   id,
-  transaction
 }: Props) {
   const [originalValue, setOriginalValue] = useState(value || '')
   const [internalValue, setInternalValue] = useState(value || '')
@@ -50,6 +49,7 @@ export default function EditableRecurrenceSelector ({
   const [isLoading, setIsLoading] = useState(false)
 
   //Allow to be editable on open
+  //TODO: find a better way to do this
   useEffect(() => {
     setIsEditable(editOnOpen || false)
   }, [])
@@ -118,7 +118,7 @@ export default function EditableRecurrenceSelector ({
     else return (false)
   }
 
-  const handleSubmit = async (transaction: Transaction, newValue: string, label: string) => {
+  const handleSubmit = async (newValue: string, label: string) => {
    return await onSubmit(transaction, newValue, label)
   }
 
