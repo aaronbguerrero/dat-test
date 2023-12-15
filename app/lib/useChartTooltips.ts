@@ -5,7 +5,7 @@ import useSWR from 'swr'
 
 import type { Transaction } from '../types'
 
-export default function setupChartTooltips (month: string) {
+export default function useChartTooltips (month: string) {
   const { data: transactions, error: transactionsError } = useSWR<Transaction[]>(`/api/transactions/getTransactions/${month}`)
 //TODO: handle error
 
