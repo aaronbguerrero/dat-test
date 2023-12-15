@@ -2,7 +2,7 @@ import { Chart } from 'chart.js'
 import toPrettyDateString from './dates/toPrettyDateString'
 import Dinero from 'dinero.js'
 
-import type { Transaction } from '../api/transactions/getTransactions/[slug]/route'
+import type { Transaction } from '../types'
 
 export default function setupChartTooltips (transactions: Transaction[] | undefined, month: string) {
   const tooltips = Chart.defaults.plugins.tooltip

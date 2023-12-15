@@ -2,8 +2,10 @@ import { Db, ObjectId } from "mongodb"
 import clientPromise from '../lib/database'
 import getNextMonth from "./dates/getNextMonth"
 import { RRule, RRuleSet } from "rrule"
+import getLastDayOfMonth from "./dates/getLastDayOfMonth"
+import toBasicDateString from "./dates/toBasicDateString"
 
-import type { Transaction } from '../api/transactions/getTransactions/[slug]/route'
+import type { Transaction } from '../types'
 import type { Session } from "next-auth"
 import getLastDayOfMonth from "./dates/getLastDayOfMonth"
 import toBasicDateString from "./dates/toBasicDateString"

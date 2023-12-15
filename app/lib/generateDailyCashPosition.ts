@@ -1,4 +1,4 @@
-import type { Transaction } from '../api/transactions/getTransactions/[slug]/route'
+import type { Transaction } from '../types'
 import type { MonthData } from '../api/months/getMonthData/[slug]/route'
 import Dinero from 'dinero.js'
 import getDaysInMonth from './dates/getDaysInMonth'

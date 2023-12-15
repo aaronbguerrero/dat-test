@@ -7,12 +7,11 @@ import clientPromise from "../../../../lib/database"
 import { ObjectId } from "mongodb" 
 import Dinero from 'dinero.js'
 
-import type { MonthData } from "../../getMonthData/[slug]/route"
-import type { Transaction } from "../../../transactions/getTransactions/[slug]/route";
 import getPreviousMonth from "../../../../lib/dates/getPreviousMonth"
-import getNextMonth from "../../../../lib/dates/getNextMonth"
-import { RRule, RRuleSet } from "rrule"
 import getTransactions from "../../../../lib/getTransactions"
+
+import type { MonthData } from "../../getMonthData/[slug]/route"
+import type { Transaction } from '../../../../types'
 
 //Setup month data
 export async function GET(request: NextRequest, { params }: { params: { slug: string }}) {

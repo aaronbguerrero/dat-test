@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { RRule } from "rrule"
 import clientPromise from "../../../../lib/database"
 
-import type { Transaction } from "../../getTransactions/[slug]/route"
+import type { Transaction } from '../../../../types'
 
 //Update Recurring Transaction. 
 //Slug parameters: editType/recurrenceParentId/date to change/property to change/value/currency (optional)
