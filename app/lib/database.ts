@@ -1,7 +1,10 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient, MongoClientOptions } from 'mongodb';
 
 const uri = process.env.MONGODB_URI as string; // your mongodb connection string
-const options = {};
+const options: MongoClientOptions = {
+  maxPoolSize: 10,
+  maxIdleTimeMS: 30000,
+};
 
 declare global {
   var _mongoClientPromise: Promise<MongoClient>;
