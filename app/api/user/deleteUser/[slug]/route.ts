@@ -24,8 +24,8 @@ export async function GET(request: NextRequest, { params}: { params: { slug: str
   if (await db.collection("transactions").findOne({ userId: id })) return NextResponse.json(false)
   
   //Delete user's external account data and verify deletion
-  await db.collection("accounts").deleteOne({ userId: id })
-  if (await db.collection("accounts").findOne({ userId: id })) return NextResponse.json(false)
+  await db.collection("linkedUserAccounts").deleteOne({ userId: id })
+  if (await db.collection("linkedUserAccounts").findOne({ userId: id })) return NextResponse.json(false)
 
   return NextResponse.json(true)
 }
