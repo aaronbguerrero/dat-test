@@ -1,7 +1,7 @@
 import { Box, Button, DialogContent, DialogTitle, Divider, TextField, Typography } from "@mui/material"
 import { signIn } from "next-auth/react"
 import { FormEvent } from "react"
-import BaseDialog from "./baseDialog"
+import BaseDialog, { BaseDialogProps, useDialog } from "./baseDialog"
 
 interface EmailFormElements extends HTMLFormControlsCollection {
   email: HTMLInputElement;
@@ -11,7 +11,13 @@ interface EmailForm extends HTMLFormElement {
   readonly elements: EmailFormElements;
 }
 
-export default function SignInDialog ({ open, onClose }: { open: boolean, onClose: () => void }) {
+type SignInDialogProps = {
+  dialogProps: BaseDialogProps,
+  open: () => void,
+  close: () => void,
+}
+
+export default function SignInDialog ({ dialogProps, open, close }: SignInDialogProps) {
   const onEmailSubmit = (event: FormEvent<EmailForm>) => {
     event.preventDefault()
     const email = event.currentTarget.elements.email.value
@@ -19,7 +25,7 @@ export default function SignInDialog ({ open, onClose }: { open: boolean, onClos
   }
   
   return (
-    <BaseDialog open={open} onClose={onClose}>
+    <BaseDialog {...dialogProps}>
       <DialogTitle align='center' color='secondary'>Sign In</DialogTitle>
 
       <DialogContent>
@@ -61,3 +67,25 @@ export default function SignInDialog ({ open, onClose }: { open: boolean, onClos
 }
 
 //TODO: Add message after OTP sents
+
+export function useSignInDialog (onCancel?: () => void) {
+  const dialogHook = useDialog()
+
+  const handleOpen = () => {
+    dialogHook.open()
+  }
+
+  const handleClose = () => {
+    dialogHook.close()
+    
+    if (onCancel) onCancel()
+  }
+
+  const dialogProps: SignInDialogProps = {
+    dialogProps: dialogHook,
+    open: handleOpen,
+    close: handleClose,
+  }
+
+  return dialogProps
+}

@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import clientPromise from "../../../../lib/database"
-import { ObjectId } from "mongodb";
-import type { MonthData } from "../../getMonthData/[slug]/route";
-import type { Transaction } from "../../../transactions/getTransactions/[slug]/route";
+import { ObjectId } from "mongodb"
 import Dinero from 'dinero.js'
 import { getServerSession } from "next-auth/next"
 import { AuthOptions } from "../../../auth/[...nextauth]/route"
-import getTransactions from "../../../../lib/getTransactions";
+import getTransactions from "../../../../lib/getTransactions"
+
+import type { MonthData } from "../../getMonthData/[slug]/route"
+import type { Transaction } from "../../../../types"
 
 //Set month ending amount
 //1. Get data

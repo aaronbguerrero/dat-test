@@ -4,13 +4,12 @@ import {
   DialogContent, 
   DialogTitle, 
 } from "@mui/material"
-import BaseDialog from "./baseDialog"
+import BaseDialog, { BaseDialogProps, useDialog } from "./baseDialog"
 import { useState } from "react"
 import SpinnerBackdrop from "../spinnerBackdrop"
 
 export type SubmittableDialogProps = { 
-  isOpen: boolean,
-  onClose: () => void,
+  dialogProps: BaseDialogProps, 
   onSubmit: () => Promise<boolean>,
   title?: string,
   children?: React.ReactNode,
@@ -25,8 +24,8 @@ export type SubmittableDialogProps = {
 }
 
 export default function SubmittableDialog ({ 
-  isOpen, 
-  onClose, 
+  dialogProps,
+  close, 
   onSubmit,
   title, 
   children, 
@@ -45,7 +44,7 @@ export default function SubmittableDialog ({
     onSubmit()
     .then(response => {
       if (response === true) {
-        onClose()
+        close()
         setIsLoading(false)
       }
       else {
@@ -55,7 +54,7 @@ export default function SubmittableDialog ({
   }
 
   return (
-    <BaseDialog open={isOpen} onClose={onClose} borderColor={borderColor}>
+    <BaseDialog borderColor={borderColor} {...dialogProps} onClose={close}>
         <SpinnerBackdrop isLoading={isLoading || false} />
 
         <DialogContent> 
@@ -75,7 +74,7 @@ export default function SubmittableDialog ({
               <Button 
               color={cancelColor || 'error'} 
               variant='contained' 
-              onClick={onClose} 
+              onClick={close} 
               fullWidth
               >
                 {cancelLabel || "Cancel"}
@@ -98,21 +97,21 @@ export default function SubmittableDialog ({
 }
 
 export function useSubmittableDialog (onSubmit: () => Promise<boolean>, onCancel?: () => void) {
-  const [isOpen, setIsOpen] = useState(false)
+  const dialogHook = useDialog()
+
 
   const handleOpen = () => {
-    setIsOpen(true)
+    dialogHook.open()
   }
 
   const handleClose = () => {
-    setIsOpen(false)
+    dialogHook.close()
     
     if (onCancel) onCancel()
   }
 
   const dialogProps: SubmittableDialogProps = {
-    isOpen: isOpen,
-    onClose: handleClose,
+    dialogProps: dialogHook,
     onSubmit: onSubmit,
     open: handleOpen,
     close: handleClose,

@@ -3,7 +3,7 @@ import clientPromise from "../../../../lib/database"
 import { ObjectId } from "mongodb"
 import { RRule } from "rrule"
 
-import type { Transaction } from "../../getTransactions/[slug]/route"
+import type { Transaction } from '../../../../types'
 
 //Delete Recurring Transaction
 //Slug parameters: editType/recurrenceParentId/date to change

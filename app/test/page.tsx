@@ -4,19 +4,28 @@ import { useSession } from "next-auth/react"
 import { Box, Button, Typography } from "@mui/material"
 import { ThemeProvider } from '@mui/material/styles'
 import { theme } from '../components/ui/themes/baseTheme'
+import NewBaseDialog, { useDialog } from "../components/ui/dialogs/baseDialog"
+import SubmittableDialog, { useSubmittableDialog } from "../components/ui/dialogs/submittableDialog"
 
-
-import BasicToast, { useToast } from "../components/ui/toasts/basicToast"
 
 export default function Test () {
-  const { data: session, status, update } = useSession()
+  // const { data: session, status, update } = useSession()
+  
+  const testClose = () => {
+    console.log("closed")
+  }
 
-  const toast = useToast()
+  const testSubmit = async () => {
+    console.log('submitted')
+    return true
+  }
 
-  const sendAlert = () => {
-    console.log("open toast")
+  const dialog = useSubmittableDialog(testSubmit, testClose)
 
-    toast.open("TEST T", 'success')
+  const test = () => {
+    console.log("Test")
+
+    dialog.open()
   }
 
   return (
@@ -24,10 +33,13 @@ export default function Test () {
       <Box display={'flex'} flexDirection={'column'} gap={4} alignItems={'center'} margin={'1rem'} padding={'1rem'}>
         <Typography variant='h3'>TEST PAGE</Typography>
 
-        <Button variant='contained' onClick={sendAlert}>TEST</Button>
+        <Button variant='contained' onClick={test}>TEST</Button>
       </Box>
 
-      <BasicToast {...toast} />
+      <SubmittableDialog {...dialog}>
+        TEST DIALOG
+      </SubmittableDialog>
+
     </ThemeProvider>
   )
 }

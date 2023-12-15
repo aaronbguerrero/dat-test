@@ -12,6 +12,7 @@ import Grid from '@mui/material/Unstable_Grid2'
 import getCurrentMonth from '../lib/dates/getCurrentMonth'
 import BasicToast, { useToast } from '../components/ui/toasts/basicToast'
 import { useSWRConfig } from 'swr'
+import setupSwrFetcher from '../lib/setupSwrFetcher'
 
 export default function Dashboard () {
   const { mutate } = useSWRConfig()
@@ -19,17 +20,7 @@ export default function Dashboard () {
   const toast = useToast()
   
   //TODO: Move fetcher to lib (add toast to file)
-  const fetcher = {
-    fetcher: (url: string) => fetch(url)
-    .then(response => {
-          if (response.ok) toast.close()
-
-          else {
-            toast.open("Sorry! There was a problem loading the transaction data. Please refresh the page.", 'error')
-          }
-      return response.json()
-    })
-  }
+  const fetcher = setupSwrFetcher("Sorry! There was a problem loading the transaction data. Please refresh the page.", toast)
 
   const [month, setMonth] = useState<Date>(getCurrentMonth())
   const handleSetMonth = (newMonth: Date) => {
@@ -63,7 +54,7 @@ export default function Dashboard () {
               <InfoPanel month={month} />
             </Grid>
 
-            <Grid order={2} xs={12} display={'flex'}>
+            <Grid order={2} xs={12}>
               <Chart month={toMonthString(month)} />
             </Grid>
           </Grid>

@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb"
 import { NextRequest, NextResponse } from "next/server"
 import clientPromise from "../../../lib/database"
 
-//Add Month to DB
+//Utility to quickly push updates to DB during dev
 export async function GET(request: NextRequest, { params }: { params: { slug: string }}) {
   const month = new Date(params.slug[0])
   const startingAmount = { amount: parseInt(params.slug[1]), currency: 'USD' }
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
   const client = await clientPromise
   const db = client.db("userData")
 
-  const response = await db.collection("transactions").updateMany({}, {$set: {'isRecurring': false}})
+  const response = await db.collection("transactions").updateMany({}, {$set: {'account': new ObjectId('6564eea8a3e854baf33a04e9')}})
 
   return NextResponse.json(response)
 }
