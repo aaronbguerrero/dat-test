@@ -1,5 +1,4 @@
 import { Db, ObjectId } from "mongodb"
-import clientPromise from '../lib/database'
 import getNextMonth from "./dates/getNextMonth"
 import { RRule, RRuleSet } from "rrule"
 import getLastDayOfMonth from "./dates/getLastDayOfMonth"
@@ -7,8 +6,6 @@ import toBasicDateString from "./dates/toBasicDateString"
 
 import type { Transaction } from '../types'
 import type { Session } from "next-auth"
-import getLastDayOfMonth from "./dates/getLastDayOfMonth"
-import toBasicDateString from "./dates/toBasicDateString"
 
 export default async function getTransactions ( db: Db, session: Session | null, date: Date) {
   const month = date.getUTCMonth() + 1
@@ -61,6 +58,7 @@ export default async function getTransactions ( db: Db, session: Session | null,
         date: recurDate,
         allDay: true,
         amount: transaction.amount,
+        account: transaction.account,
         recurrenceId: transaction.recurrenceId,
         recurrenceParentId: transaction._id.toString(),
         recurrenceFreq: transaction.recurrenceFreq,

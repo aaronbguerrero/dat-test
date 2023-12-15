@@ -6,6 +6,9 @@ import {
   DialogContentText, 
   DialogTitle, 
   FormControlLabel, 
+  ListItemIcon, 
+  ListItemText, 
+  MenuItem, 
   Switch,
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
@@ -22,10 +25,22 @@ import BasicToast, { useToast } from '../toasts/basicToast'
 import InputField from '../formElements/inputField'
 import { z } from 'zod'
 import { CreateTwoTone } from '@mui/icons-material'
+import useSWR from 'swr'
 
 import type { ScopedMutator } from 'swr/_internal'
 import SpinnerBackdrop from '../spinnerBackdrop'
 import currencySchema from '../../../schemas/currencySchema'
+import AccountIcon from '../accountIcon'
+
+import type { Account } from '../../../types'
+
+export type AddTransactionDialogProps = {
+  dialogProps: BaseDialogProps,
+  date: Date, 
+  mutate: ScopedMutator,
+  open: (date: Date) => void,
+  close: () => void,
+}
 
 export type AddTransactionDialogProps = {
   dialogProps: BaseDialogProps,
@@ -53,6 +68,10 @@ export default function AddTransactionDialog ({
       setCurrencyUsed(session?.user?.currencyUsed)
     }
   }, [session])
+
+  //Get account data
+  const { data: accounts, error: accountsError } = useSWR<Account[]>(`/api/accounts/getAccounts`)
+  if (accountsError) toast.open("Sorry! There was a problem getting your account data. Please try again.", 'error')
 
   const handleClose = () => {
     close()
@@ -93,7 +112,7 @@ export default function AddTransactionDialog ({
     if (transactionType === 'expense') amount = -Math.abs(removeCurrencyFormat(formData.amount.toString()))
     else amount = Math.abs(removeCurrencyFormat(formData.amount.toString()))
     
-    await fetch(`/api/transactions/addTransaction/${date}/${encodeURIComponent(formData.title.toString())}/${amount}/${isRecurring ? recurrence : ''}`)
+    await fetch(`/api/transactions/addTransaction/${date}/${encodeURIComponent(formData.title.toString())}/${amount}/${formData.account.toString()}/${isRecurring ? recurrence : ''}`)
     .then(response => response.json())
     .then(async response => {
       if (response.acknowledged) {
@@ -169,6 +188,28 @@ export default function AddTransactionDialog ({
             schema={amountSchema}
             required
             />
+
+            <InputField 
+            name='account'
+            fullWidth 
+            select 
+            label='Account'
+            >
+              {accounts?.map(account => {
+                return <MenuItem 
+                value={account._id.toString()}
+                key={account._id.toString()}
+                
+                >
+                  <ListItemIcon>
+                    <AccountIcon type={account.type} />
+                  </ListItemIcon>
+                  {account.title}
+                </MenuItem>
+              })}
+
+            </InputField>
+
 
             <FormControlLabel 
             control={<Switch checked={isRecurring} color='secondary' />} 

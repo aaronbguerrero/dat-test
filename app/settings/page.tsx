@@ -12,19 +12,25 @@ import EditableInputField from "../components/ui/formElements/editableInputField
 import EditableCurrencySelector from "../components/ui/formElements/editableCurrencySelector"
 import DeleteUserDialog, { useDeleteUserDialog } from "../components/ui/dialogs/deleteUserDialog"
 import { z } from "zod"
+import { Account } from "../api/accounts/getAccounts/route"
+import useSWR, { SWRConfig } from "swr"
+import setupSwrFetcher from "../lib/setupSwrFetcher"
+import AccountsCard from "../components/settings/accountsCard"
 
 export default function Settings () {
-  const { data: session, status, update } = useSession()
+  const toast = useToast()
 
-  const [isEditing, setIsEditing] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const fetcher = setupSwrFetcher("Sorry! There was a problem loading the account data. Please refresh the page.", toast)
+
+  const { data: session, status, update } = useSession()
+  
+  const [isUserSettingsEditing, setIsUserSettingsEditing] = useState(false)
+  const [isUserSettingsLoading, setIsUserSettingsLoading] = useState(true)
   useEffect(() => {
     if (status === 'authenticated') {
-      setIsLoading(false)
+      setIsUserSettingsLoading(false)
     }
-  }, [status])
-
-  const toast = useToast()
+  }, [status, setIsUserSettingsLoading])
 
   const handleSubmit = async (value: string, property: string | undefined) => {
     if (property === undefined) return false
@@ -75,106 +81,96 @@ export default function Settings () {
 
   const deleteUserDialog = useDeleteUserDialog(handleDeleteUser, session?.user?.email)
 
+  // const test = userA
+
   return (
-    <ThemeProvider theme={theme}>
-      <Box display={'flex'} flexDirection={'column'} gap={4} alignItems={'center'} margin={'1rem'}>
-        {/* TODO: validation on submit!!  */}
-        <Card
-        sx={{
-          minWidth: { xs: '100%', lg: '30rem' },
-          maxWidth: { xs: '100%', lg: '50rem' },
-        }}
-        >
-          <CardHeader
-          titleTypographyProps={{ color: theme.palette.secondary.main, fontSize: '1.5rem', }}
-          title="User Settings" 
-          avatar={
-            <Avatar src={session?.user?.image ?? ''} sx={{ backgroundColor: 'secondary' }}>
-              {session ? null : <PersonTwoTone />}
-            </Avatar>
-          }
-          />
-
-          <Divider />
-
-          <Stack spacing={2} padding='1rem'>
-            { isLoading ? 
-              <Skeleton height={50} /> 
-              :
-              <EditableInputField 
-              label="Name" 
-              id='name'
-              value={session?.user?.name || ''}
-              onSubmit={handleSubmit}
-              schema={z.string()}
-              isEditingFlag={(isEditing) => setIsEditing(isEditing)}
-              disabled={isEditing}
-              />
+    <SWRConfig value={fetcher}>
+      <ThemeProvider theme={theme}>
+        <Box display={'flex'} flexDirection={'column'} gap={4} alignItems={'center'} margin={'1rem'}>
+          {/* TODO: validation on submit!!  */}
+          <Card
+          sx={{
+            minWidth: { xs: '100%', lg: '30rem' },
+            maxWidth: { xs: '100%', lg: '50rem' },
+          }}
+          >
+            <CardHeader
+            titleTypographyProps={{ color: theme.palette.secondary.main, fontSize: '1.5rem', }}
+            title="User Settings" 
+            avatar={
+              <Avatar src={session?.user?.image ?? ''} sx={{ backgroundColor: 'secondary' }}>
+                {session ? null : <PersonTwoTone />}
+              </Avatar>
             }
+            />
 
-            { isLoading ? 
-              <Skeleton height={50} /> 
-              :
-              <EditableInputField 
-              label="Email Address" 
-              id='email'
-              value={session?.user?.email || ''}
-              onSubmit={handleSubmit}
-              //TODO: validate email address on submit
-              schema={z.string()}
-              isEditingFlag={(isEditing) => setIsEditing(isEditing)}
-              disabled={isEditing}
-              />
-            }
+            <Divider />
 
-            { isLoading ? 
-              <Skeleton height={50} /> 
-              :
-              <EditableCurrencySelector 
-              id='currencyUsed'
-              value={session?.user?.currencyUsed || 'USD'} 
-              onSubmit={handleCurrencySubmit}
-              isEditingFlag={(isEditing) => setIsEditing(isEditing)}
-              disabled={isEditing}
-              />
-            }
+            <Stack spacing={2} padding='1rem'>
+              { isUserSettingsLoading ? 
+                <Skeleton height={50} /> 
+                :
+                <EditableInputField 
+                label="Name" 
+                id='name'
+                value={session?.user?.name || ''}
+                onSubmit={handleSubmit}
+                schema={z.string()}
+                isEditingFlag={(isUserSettingsEditing) => setIsUserSettingsEditing(isUserSettingsEditing)}
+                disabled={isUserSettingsEditing}
+                />
+              }
 
-            { isLoading ? 
-              <Skeleton height={50} /> 
-              :
-              <Button 
-              onClick={() => deleteUserDialog.open()}
-              color='error' 
-              variant='contained'
-              disabled={isEditing}
-              >
-                <DeleteTwoTone />
-                Delete Account 
-              </Button>
-            }
-          </Stack>
-        </Card>
+              { isUserSettingsLoading ? 
+                <Skeleton height={50} /> 
+                :
+                <EditableInputField 
+                label="Email Address" 
+                id='email'
+                value={session?.user?.email || ''}
+                onSubmit={handleSubmit}
+                //TODO: validate email address on submit
+                schema={z.string()}
+                isEditingFlag={(isUserSettingsEditing) => setIsUserSettingsEditing(isUserSettingsEditing)}
+                disabled={isUserSettingsEditing}
+                />
+              }
 
-        <Card
-        sx={{
-          minWidth: { xs: '100%', lg: '30rem' },
-          maxWidth: { xs: '100%', lg: '50rem' },
-        }}
-        >
-          <CardHeader title="Account Settings (Future)" />
+              { isUserSettingsLoading ? 
+                <Skeleton height={50} /> 
+                :
+                <EditableCurrencySelector 
+                id='currencyUsed'
+                value={session?.user?.currencyUsed || 'USD'} 
+                onSubmit={handleCurrencySubmit}
+                isEditingFlag={(isUserSettingsEditing) => setIsUserSettingsEditing(isUserSettingsEditing)}
+                disabled={isUserSettingsEditing}
+                />
+              }
 
-          <Divider />
+              { isUserSettingsLoading ? 
+                <Skeleton height={50} /> 
+                :
+                <Button 
+                onClick={() => deleteUserDialog.open()}
+                color='error' 
+                variant='contained'
+                disabled={isUserSettingsEditing}
+                >
+                  <DeleteTwoTone />
+                  Delete Account 
+                </Button>
+              }
+            </Stack>
+          </Card>
 
-          <Stack>
-            <Typography>Checking</Typography>
-            <Typography>Credit Card</Typography>
-          </Stack>
-        </Card>
+          <AccountsCard />
 
-        <DeleteUserDialog {...deleteUserDialog} />
-      </Box>
+          <DeleteUserDialog {...deleteUserDialog} />
+        </Box>
 
-      <BasicToast {...toast} />
-    </ThemeProvider>
+        <BasicToast {...toast} />
+      </ThemeProvider>
+    </SWRConfig>
   )
 }
