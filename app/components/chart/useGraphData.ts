@@ -33,10 +33,14 @@ export default function useGraphData ( month: string, activeAccounts: string[] )
     else setError(false)
   }, [accountsError, monthError, setError, transactionsError])
 
-  //Setup graph data for each account
+  //Setup date labels
   useEffect(() => {
     setXAxisLabels([...Array(getDaysInMonth(month) + 1).keys()])
-    if (accounts !== undefined && transactions !== undefined && monthData !== undefined && !error) {
+  }, [month])
+
+  //Setup graph data for each account
+  useEffect(() => {
+    if (accounts !== undefined && transactions !== undefined && monthData && monthData !== undefined && !error) {
       const dataToGraph: ChartData<'line'> = {
         labels: xAxisLabels,
         datasets: accounts.filter(account => activeAccounts.includes(account._id.toString()))
@@ -89,7 +93,7 @@ export default function useGraphData ( month: string, activeAccounts: string[] )
 
       setData(dataToGraph) 
     }
-  }, [accounts, activeAccounts, error, month, monthData, theme.palette, transactions, xAxisLabels])
+  }, [accounts, activeAccounts, error, monthData, theme.palette, transactions, xAxisLabels])
 
   return { data: data, error: error }
 }
