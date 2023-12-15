@@ -15,7 +15,11 @@ export default function AccountsButtons ({ onChange, exclusive, orientation }: P
   const toast = useToast()
   
   const { data: accounts, error: accountsError } = useSWR<Account[]>(`/api/accounts/getAccounts`)
-  if (accountsError) toast.open("Sorry! There was a problem loading your accounts, please refresh the page!", 'error')
+  useEffect(() => {
+    if (accountsError) {
+      toast.open("Sorry! There was a problem loading your accounts, please refresh the page!", 'error')
+    }
+  }, [accountsError])
 
   //Setup active accounts control
   const [activeAccounts, setActiveAccounts] = useState<string[]>([])

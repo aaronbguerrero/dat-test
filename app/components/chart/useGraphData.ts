@@ -32,15 +32,16 @@ export default function useGraphData ( month: string, activeAccounts: string[] )
   useEffect(() => {
     if (accountsError || monthError || transactionsError) setError(true)
     else setError(false)
-  }, [accountsError, monthError, transactionsError])
+  }, [accountsError, monthError, setError, transactionsError])
 
   //Setup graph data for each account
   useEffect(() => {
     setXAxisLabels([...Array(getDaysInMonth(month) + 1).keys()])
-    if (accounts !== undefined && transactions !== undefined && monthData !== undefined) {
+    if (accounts !== undefined && transactions !== undefined && monthData !== undefined && !error) {
       const dataToGraph: ChartData<'line'> = {
         labels: xAxisLabels,
-        datasets: accounts.filter(account => activeAccounts.includes(account._id.toString())).map(account => {
+        datasets: accounts.filter(account => activeAccounts.includes(account._id.toString()))
+        .map(account => {
           return {
             label: account.title,
             borderColor: account.color,

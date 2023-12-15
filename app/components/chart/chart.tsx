@@ -8,7 +8,7 @@ import BasicToast, { useToast } from "../ui/toasts/basicToast"
 import setupChartTooltips from "../../lib/setupChartTooltips"
 import { Box, Paper } from "@mui/material"
 import { useSession } from "next-auth/react"
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import AccountsButtons from '../ui/buttons/accountsButtons'
 
 export default function Chart ({ month }: { month: string }) {
@@ -28,7 +28,10 @@ export default function Chart ({ month }: { month: string }) {
   
   //Setup graph data
   const { data: graphData, error: graphError } = useGraphData(month, activeAccounts)
-  if (graphError) toast.open("Sorry! There was a problem loading some of the graph data. Please refresh the page.", 'error')
+  useEffect(() => {
+    if (graphError) toast.open("Sorry! There was a problem loading some of the graph data. Please refresh the page.", 'error')
+    else toast.close()
+  }, [graphError, toast])
   
   return (
     <Paper sx={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden', }}>
