@@ -19,7 +19,7 @@ export default function AccountSelector () {
     }
 
     else setError(false)
-  }, [accountsError])
+  }, [accountsError, toast])
 
   const [error, setError] = useState<boolean>(false)
 

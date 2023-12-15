@@ -47,12 +47,7 @@ export default function AccountsCard ({}) {
     editAccountDialog.open(account)
   }
   
-  const handleEditAccount = async () => {
-    console.log("edit account submit")
-    return true
-  }
-  
-  const editAccountDialog = useEditAccountDialog(handleEditAccount)
+  const editAccountDialog = useEditAccountDialog()
 
   return (
     <Card
