@@ -6,6 +6,8 @@ import {
   DialogContentText, 
   DialogTitle, 
   FormControlLabel, 
+  ListItemIcon, 
+  ListItemText, 
   MenuItem, 
   Switch,
 } from '@mui/material'
@@ -28,7 +30,17 @@ import useSWR from 'swr'
 import type { ScopedMutator } from 'swr/_internal'
 import SpinnerBackdrop from '../spinnerBackdrop'
 import currencySchema from '../../../schemas/currencySchema'
-import { Account } from '../../../api/accounts/getAccounts/route'
+import AccountIcon from '../accountIcon'
+
+import type { Account } from '../../../types'
+
+export type AddTransactionDialogProps = {
+  dialogProps: BaseDialogProps,
+  date: Date, 
+  mutate: ScopedMutator,
+  open: (date: Date) => void,
+  close: () => void,
+}
 
 export default function AddTransactionDialog ({
    isOpen, setIsOpen, date, mutate
@@ -170,12 +182,17 @@ export default function AddTransactionDialog ({
             name='account'
             fullWidth 
             select 
-            label='Account'>
+            label='Account'
+            >
               {accounts?.map(account => {
                 return <MenuItem 
                 value={account._id.toString()}
                 key={account._id.toString()}
+                
                 >
+                  <ListItemIcon>
+                    <AccountIcon type={account.type} />
+                  </ListItemIcon>
                   {account.title}
                 </MenuItem>
               })}

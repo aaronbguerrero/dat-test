@@ -12,6 +12,7 @@ export type InputFieldProps = TextFieldProps & {
 }
 
 export default function InputField ({ 
+  children,
   label, 
   value, 
   onChange, 
@@ -21,6 +22,7 @@ export default function InputField ({
   type, 
   disabled, 
   required, 
+  select,
   // revalidate, 
   errorState,
   helperText,
@@ -84,6 +86,9 @@ export default function InputField ({
           ...InputProps,
         }}
         required={required}
-        />
+        select={select}
+        >
+          {children}
+        </TextField>
   )
 }
