@@ -5,7 +5,7 @@ import useGraphData from "./useGraphData"
 import ChartOptions from "./chartOptions"
 import BasicToast, { useToast } from "../ui/toasts/basicToast"
 
-import setupChartTooltips from "../../lib/setupChartTooltips"
+import useChartTooltips from "../../lib/useChartTooltips"
 import { Box, Paper } from "@mui/material"
 import { useSession } from "next-auth/react"
 import React, { useEffect, useState } from 'react'
@@ -18,7 +18,7 @@ export default function Chart ({ month }: { month: string }) {
 
   //Setup Chart.JS
   ChartJS.register(annotationPlugin, CategoryScale, Legend, LinearScale, PointElement, LineElement, Tooltip, Filler)
-  setupChartTooltips(month)
+  useChartTooltips(month)
   
   //Setup active accounts control
   const [activeAccounts, setActiveAccounts] = useState<string[]>([]) 
