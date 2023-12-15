@@ -42,14 +42,6 @@ export type AddTransactionDialogProps = {
   close: () => void,
 }
 
-export type AddTransactionDialogProps = {
-  dialogProps: BaseDialogProps,
-  date: Date, 
-  mutate: ScopedMutator,
-  open: (date: Date) => void,
-  close: () => void,
-}
-
 export default function AddTransactionDialog ({
   dialogProps,
   date, 

@@ -12,8 +12,7 @@ import EditableInputField from "../components/ui/formElements/editableInputField
 import EditableCurrencySelector from "../components/ui/formElements/editableCurrencySelector"
 import DeleteUserDialog, { useDeleteUserDialog } from "../components/ui/dialogs/deleteUserDialog"
 import { z } from "zod"
-import { Account } from "../api/accounts/getAccounts/route"
-import useSWR, { SWRConfig } from "swr"
+import { SWRConfig } from "swr"
 import setupSwrFetcher from "../lib/setupSwrFetcher"
 import AccountsCard from "../components/settings/accountsCard"
 

@@ -5,14 +5,17 @@ import EditButton from "../buttons/editButton"
 import RemoveButton from "../buttons/removeButton"
 import ConfirmationDialog, { useConfirmationDialog } from "../dialogs/confirmationDialog"
 
-interface PropsWithoutInitialValue { 
-  onSubmit: (newValue: string, label: string) => Promise<boolean>,
-  onRemove?: () => Promise<boolean>,
+import type { Transaction } from '../../../types'
+
+interface PropsWithoutInitialValue {
+  onSubmit: (transaction: Transaction, newValue: string, label: string) => Promise<boolean>,
+  onRemove?: (transaction: Transaction) => Promise<boolean>,
   label?: string,
   isEditingFlag?: (isEditing: boolean) => void,
   disabled?: boolean,
   editOnOpen?: boolean,
   id: string,
+  transaction: Transaction,
 }
 
 type PropsWithInitialValue = 
@@ -28,7 +31,18 @@ type PropsWithInitialValue =
 type Props = PropsWithoutInitialValue & PropsWithInitialValue
 
 
-export default function EditableRecurrenceSelector ({ value, onSubmit, onRemove, label, date, isEditingFlag, disabled, editOnOpen, id }: Props) {
+export default function EditableRecurrenceSelector ({ 
+  value, 
+  onSubmit, 
+  onRemove, 
+  label, 
+  date, 
+  isEditingFlag, 
+  disabled, 
+  editOnOpen, 
+  id,
+  transaction
+}: Props) {
   const [originalValue, setOriginalValue] = useState(value || '')
   const [internalValue, setInternalValue] = useState(value || '')
   
@@ -64,7 +78,7 @@ export default function EditableRecurrenceSelector ({ value, onSubmit, onRemove,
         setIsLoading(true)
         setIsEditable(false)
 
-        await handleSubmit(internalValue, id)
+        await handleSubmit(transaction, internalValue, id)
         .then(response => {
           setIsLoading(false)
 
@@ -88,7 +102,7 @@ export default function EditableRecurrenceSelector ({ value, onSubmit, onRemove,
     if (onRemove) {
       setIsLoading(true)
 
-      const response = await onRemove()
+      const response = await onRemove(transaction)
       .then(response => {
         if (response === true) {
           setIsLoading(false)
@@ -104,8 +118,8 @@ export default function EditableRecurrenceSelector ({ value, onSubmit, onRemove,
     else return (false)
   }
 
-  const handleSubmit = async (newValue: string, label: string) => {
-   return await onSubmit(newValue, label)
+  const handleSubmit = async (transaction: Transaction, newValue: string, label: string) => {
+   return await onSubmit(transaction, newValue, label)
   }
 
   const onChange = (rule: string) => {
