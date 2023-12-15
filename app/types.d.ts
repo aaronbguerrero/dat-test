@@ -28,6 +28,7 @@ export interface Transaction {
   readonly _id: string | ObjectId,
   title: string,
   date: Date,
+  account: Account._id,
   allDay: boolean,
   amount: { amount: number, currency: Dinero.Currency },
   isRecurring?: boolean,

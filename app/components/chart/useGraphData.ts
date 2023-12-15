@@ -7,9 +7,8 @@ import generateDailyCashPosition from "../../lib/generateDailyCashPosition"
 import { MonthData } from "../../api/months/getMonthData/[slug]/route"
 import getDaysInMonth from "../../lib/dates/getDaysInMonth"
 
-import type { Transaction } from '../../types'
+import type { Account, Transaction } from '../../types'
 import type { ChartData } from "chart.js"
-import type { Account } from "../../types"
 
 export default function useGraphData ( month: string, activeAccounts: string[] ): { data: ChartData<'line'>, error: boolean } {
   const theme = useTheme()
