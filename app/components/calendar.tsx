@@ -159,7 +159,7 @@ export default function Calendar ({ month, setMonth }: Props) {
       const newEvents: EventInput[] = []
       
       transactions.forEach((transaction: Transaction) => {
-        if (!transaction.amount.amount || !transaction.amount.currency) return
+        if (transaction.amount.amount ===  null || transaction.amount.currency === null) return
 
         //Create FullCalendar event
         const event: EventInput = {
