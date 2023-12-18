@@ -13,7 +13,7 @@ export interface RecurEditDialogProps {
   dialogProps: SubmittableDialogProps,
   editType: 'single' | 'future' | 'all',
   setEditType: (editType: 'single' | 'future' | 'all') => void,
-  open: (transaction?: Transaction, newValue?: string, property?: string) => void,
+  open: (transaction?: Transaction, newValue?: string, property?: string, date?: string) => void,
   property: string,
 }
 
@@ -69,9 +69,10 @@ export default function RecurEditDialog ({
 export function useRecurEditDialog (
   onSubmit: (
     editType: 'single' | 'future' | 'all', 
-    transaction?: Transaction | undefined,
     newValue?: string, 
-    property?: string
+    property?: string,
+    transaction?: Transaction,
+    date?: string,
   ) => Promise<boolean>, 
   onCancel?: () => void,
 ) {
@@ -79,17 +80,24 @@ export function useRecurEditDialog (
   const [editType, setEditType] = useState<'single' | 'future' | 'all'>('single')
   const [value, setValue] = useState('')
   const [property, setProperty] = useState('')
+  const [date, setDate] = useState('')
   
-  const handleOpen = (transaction?: Transaction, newValue?: string, property?: string) => {
+  const handleOpen = (
+    transaction?: Transaction, 
+    newValue?: string, 
+    property?: string,
+    date?: string,
+  ) => {
     if (transaction) setTransaction(transaction)
     setValue(newValue || '')
     setProperty(property || 'date')
+    setDate(date || '')
 
     dialogHook.open()
   }
   
   const handleSubmit = async () => {
-    const response = onSubmit(editType, transaction, value, property)
+    const response = onSubmit(editType, value, property, transaction, date)
     .then(response => {
       if (response === true) setEditType('single')
       return response

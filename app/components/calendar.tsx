@@ -85,6 +85,7 @@ export default function Calendar ({ month, setMonth }: Props) {
     .then(response => {
       if (response === true) {
         mutate(`/api/transactions/getTransactions/${month}`)
+        //TODO: Update month ending amount (should rethink this piece)
         
         toast.open("Transaction(s) updated successfully!", 'success')
       }
@@ -96,36 +97,34 @@ export default function Calendar ({ month, setMonth }: Props) {
     })
   }
 
-  const updateRecurringEvent = async (editType: 'single' | 'future' | 'all') => {
-    if (recurEditDialogEvent?.event._instance && recurEditDialogEvent?.oldEvent._instance) {
-      const parentId = recurEditDialogEvent.event._def.extendedProps.recurrenceParentId
-      const originalDate = toBasicDateString(recurEditDialogEvent.oldEvent._instance.range.start)
-      const newDate = toBasicDateString(recurEditDialogEvent.event._instance.range.start)
-      
-      const response = await fetch(`/api/transactions/updateRecurringTransaction/${editType}/${parentId}/${originalDate}/date/${newDate}`)
-      .then(response => response.json())
-      .then(response => {
-        if (response === true) {
-          mutate(`/api/transactions/getTransactions/${month}`)
-          
-          toast.open("Transaction(s) updated successfully!", 'success')
+  const updateRecurringEventDate = async (
+    editType: 'single' | 'future' | 'all', 
+    newDate?: string, 
+    property?: string, 
+    transaction?: Transaction, 
+    originalDate?: string,
+  ) => {
+    const response = await fetch(`/api/transactions/updateRecurringTransaction/${editType}/${transaction}/${originalDate}/${property}/${newDate}`)
+    .then(response => response.json())
+    .then(response => {
+      if (response === true) {
+        mutate(`/api/transactions/getTransactions/${month}`)
+        
+        toast.open("Transaction(s) updated successfully!", 'success')
 
-          return true
-        }
+        return true
+      }
 
-        else {
-          mutate(`/api/transactions/getTransactions/${month}`)
-          
-          toast.open('Sorry! There was a problem updating the transaction(s). Please try again.', 'error')
-          
-          return false
-        }
-      })
+      else {
+        mutate(`/api/transactions/getTransactions/${month}`)
+        
+        toast.open('Sorry! There was a problem updating the transaction(s). Please try again.', 'error')
+        
+        return false
+      }
+    })
 
-      return response
-    }
-
-    return false
+    return response
   }
   
   //TODO: Render recurring events on top of each day
@@ -153,13 +152,7 @@ export default function Calendar ({ month, setMonth }: Props) {
     )
   }
   
-  const [recurEditDialogEvent, setRecurEditDialogEvent] = useState<EventChangeArg>()
-
-  const handleCancelUpdateRecurringEvent = () => {
-    recurEditDialogEvent?.revert()
-  }
-  
-  const recurEditDialog = useRecurEditDialog(updateRecurringEvent, handleCancelUpdateRecurringEvent)
+  const recurEditDialog = useRecurEditDialog(updateRecurringEventDate)
   
   //Mutate Transactions to FullCalendar events
   useEffect(() => {
