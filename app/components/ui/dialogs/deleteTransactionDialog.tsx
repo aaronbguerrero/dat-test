@@ -62,12 +62,12 @@ export default function DeleteTransactionDialog ({
   )
 }
 
-export function useDeleteTransactionDialog (onDelete: (transaction: Transaction | undefined, editType: 'single' | 'future' | 'all') => Promise<boolean>) {
+export function useDeleteTransactionDialog (onDelete: (editType: 'single' | 'future' | 'all') => Promise<boolean>) {
   const [transaction, setTransaction] = useState<Transaction>()
   const [editType, setEditType] = useState<'single' | 'future' | 'all'>('single')
   
   const handleDelete = async () => {
-    const response = onDelete(transaction, editType)
+    const response = onDelete(editType)
     .then(response => {
       if (response === true) setEditType('single')
       return response

@@ -8,8 +8,8 @@ import { Transaction } from "../../../types"
 
 interface PropsWithoutInitialValue { 
   transaction: Transaction,
-  onSubmit: (transaction: Transaction, newValue: string, label: string) => Promise<boolean>,
-  onRemove?: (transaction: Transaction) => Promise<boolean>,
+  onSubmit: (newValue: string, label: string) => Promise<boolean>,
+  onRemove?: () => Promise<boolean>,
   label?: string,
   isEditingFlag?: (isEditing: boolean) => void,
   disabled?: boolean,
@@ -78,7 +78,7 @@ export default function EditableRecurrenceSelector ({
         setIsLoading(true)
         setIsEditable(false)
 
-        await onSubmit(transaction, internalValue, id)
+        await onSubmit(internalValue, id)
         .then(response => {
           setIsLoading(false)
 
@@ -102,7 +102,7 @@ export default function EditableRecurrenceSelector ({
     if (onRemove) {
       setIsLoading(true)
 
-      const response = await onRemove(transaction)
+      const response = await onRemove()
       .then(response => {
         if (response === true) {
           setIsLoading(false)
