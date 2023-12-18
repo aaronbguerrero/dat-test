@@ -53,14 +53,14 @@ export default async function getTransactions ( db: Db, session: Session | null,
     ruleSet.between(date, getLastDayOfMonth(date), true).map(recurDate => {
       //Build and add a transaction for each recurrence
       const newTransaction: Transaction = {
-        _id: transaction._id + '-' + toBasicDateString(recurDate),
+        _id: new ObjectId(),
         title: transaction.title,
         date: recurDate,
         allDay: true,
         amount: transaction.amount,
         account: transaction.account,
         recurrenceId: transaction.recurrenceId,
-        recurrenceParentId: transaction._id.toString(),
+        recurrenceParentId: transaction._id,
         recurrenceFreq: transaction.recurrenceFreq,
       }
 
