@@ -48,6 +48,7 @@ export default function Calendar ({ month, setMonth }: Props) {
   }, [calendarApi, month])
   
   const [events, setEvents] = useState<EventInput[]>([])
+  const [eventToRevert, setEventToRevert] = useState<EventChangeArg>()
    
   //Click event handlers
   const handleDateClick = (clickedDate: DateClickArg) => {
@@ -57,17 +58,23 @@ export default function Calendar ({ month, setMonth }: Props) {
   }
   
   const handleEventClick = (event: EventClickArg) => {
-    editTransactionDialog.open(transactions?.find(transaction => transaction._id.toString() === event.event._def.publicId))
+    editTransactionDialog.open(
+      transactions?.find(transaction => transaction._id.toString() === event.event._def.publicId)
+    )
   }
   
   const handleEventDateChange = (event: EventChangeArg) => {
+    setEventToRevert(event)
+
     if (
       event.event._def.extendedProps.recurrenceParentId && 
       event?.event?._instance?.range.start && 
       event?.oldEvent?._instance?.range.start
     ) {
       recurEditDialog.open(
-        event.event._def.extendedProps.recurrenceParentId,
+        transactions?.find(
+          transaction => transaction._id.toString() === event.event.id
+        ),
         toBasicDateString(event.event._instance.range.start),
         'date',
         toBasicDateString(event.oldEvent._instance.range.start),
@@ -91,6 +98,9 @@ export default function Calendar ({ month, setMonth }: Props) {
       }
       else {
         mutate(`/api/transactions/getTransactions/${month}`)
+
+        eventToRevert?.revert()
+        setEventToRevert(undefined)
         
         toast.open('Sorry! There was a problem updating the transaction(s). Please try again.', 'error')
       }
@@ -116,6 +126,9 @@ export default function Calendar ({ month, setMonth }: Props) {
       }
 
       else {
+        eventToRevert?.revert()
+        setEventToRevert(undefined)
+
         mutate(`/api/transactions/getTransactions/${month}`)
         
         toast.open('Sorry! There was a problem updating the transaction(s). Please try again.', 'error')
@@ -126,7 +139,12 @@ export default function Calendar ({ month, setMonth }: Props) {
 
     return response
   }
-  
+
+  const handleCancelUpdateRecurringEvent = () => {
+    eventToRevert?.revert()
+    setEventToRevert(undefined)
+  }
+
   //TODO: Render recurring events on top of each day
 
   // Event content and tooltips
@@ -152,7 +170,7 @@ export default function Calendar ({ month, setMonth }: Props) {
     )
   }
   
-  const recurEditDialog = useRecurEditDialog(updateRecurringEventDate)
+  const recurEditDialog = useRecurEditDialog(updateRecurringEventDate, handleCancelUpdateRecurringEvent)
   
   //Mutate Transactions to FullCalendar events
   useEffect(() => {
