@@ -39,9 +39,9 @@ export type EditTransactionDialogProps = {
   isAddingRecur: boolean,
   setIsAddingRecur: (isAddingRecur: boolean) => void,
   handleTypeChange: (event: React.MouseEvent<HTMLElement>, value: string) => void,
-  handleSubmit: (transaction: Transaction, newValue: string, property: string | undefined) => Promise<boolean>,
-  handleAddRecurrence: (transaction: Transaction, newValue: string, newProperty: string) => Promise<boolean>,
-  handleRemoveRecurrence: (transaction: Transaction) => Promise<boolean>,
+  handleSubmit: (newValue: string, property: string | undefined) => Promise<boolean>,
+  handleAddRecurrence: (newValue: string, newProperty: string) => Promise<boolean>,
+  handleRemoveRecurrence: () => Promise<boolean>,
   handleAddRecurrenceClick: () => void,
 }
 
@@ -83,7 +83,13 @@ export default function EditTransactionDialog ({
   return (
     <>
       <BaseDialog 
-      borderColor={(transaction.amount.amount < 0) ? theme.palette.tertiary.main : theme.palette.primary.main}
+      borderColor={
+        (transaction.amount.amount < 0) 
+        ? 
+        theme.palette.tertiary.main 
+        : 
+        theme.palette.primary.main
+      }
       {...dialogProps}
       >
         <DialogTitle display={'flex'} alignItems='center'>
@@ -116,7 +122,7 @@ export default function EditTransactionDialog ({
           label='Title'
           id='title'
           value={transaction.title}
-          onSubmit={(newValue, property) => handleSubmit(transaction, newValue, property)}
+          onSubmit={(newValue, property) => handleSubmit(newValue, property)}
           schema={titleSchema}
           disabled={isEditing}
           isEditingFlag={(isEditing) => setIsEditing(isEditing)}
@@ -126,7 +132,7 @@ export default function EditTransactionDialog ({
           label='Date'
           id='date'
           value={toBasicDateString(new Date(transaction.date))}
-          onSubmit={(newValue, property) => handleSubmit(transaction, newValue, property)}
+          onSubmit={(newValue, property) => handleSubmit(newValue, property)}
           //Don't need schema since date type input handles formatting
           type='date'
           disabled={isEditing}
@@ -137,7 +143,7 @@ export default function EditTransactionDialog ({
           label='Amount'
           id='amount'
           value={Dinero(transaction.amount).toFormat()}
-          onSubmit={(newValue, property) => handleSubmit(transaction, newValue, property)}
+          onSubmit={(newValue, property) => handleSubmit(newValue, property)}
           schema={amountSchema}
           disabled={isEditing}
           isEditingFlag={(isEditing) => setIsEditing(isEditing)}
@@ -217,30 +223,32 @@ export function useEditTransactionDialog(mutate: ScopedMutator) {
   //States and handlers
   const [isEditing, setIsEditing] = useState(false)
   
+  const [isRecurring, setIsRecurring] = useState<boolean>((transaction?.recurrenceParentId || transaction?.isRecurring) ? true : false)
+  const [isAddingRecur, setIsAddingRecur] = useState<boolean>(false)
+
   const handleClose = () => {
     dialogHook.close()
     setIsEditing(false)
     setIsAddingRecur(false)
   }
   
-  const [isRecurring, setIsRecurring] = useState<boolean>((transaction?.recurrenceParentId || transaction?.isRecurring) ? true : false)
-  const [isAddingRecur, setIsAddingRecur] = useState<boolean>(false)
-  useEffect(() => {
+  const handleOpen = (transaction: Transaction | undefined) => {
     if (transaction?.recurrenceParentId || transaction?.isRecurring) setIsRecurring(true)
     else setIsRecurring(false)
-  }, [transaction, setIsRecurring])
-  
-  const handleOpen = (transaction: Transaction | undefined) => {
-    if (transaction) setTransaction(transaction)
+
+    setTransaction(transaction)
+
     dialogHook.open()
   }
 
   const handleTypeChange = (event: React.MouseEvent<HTMLElement>, value: string) => {
     if (transaction) {
       if (value === 'null') return
-      if (value === 'income') return handleSubmit(transaction, Math.abs(transaction.amount.amount).toString(), 'amount')
-      if (value === 'expense') return handleSubmit(transaction, (-transaction.amount.amount).toString(), 'amount')
+      if (value === 'income') return handleSubmit(Math.abs(transaction.amount.amount).toString(), 'amount')
+      if (value === 'expense') return handleSubmit((-transaction.amount.amount).toString(), 'amount')
     }
+
+    else return false
   }
 
   const handleAddRecurrenceClick = () => {
@@ -248,7 +256,9 @@ export function useEditTransactionDialog(mutate: ScopedMutator) {
     setIsEditing(true)
   }
 
-  const handleAddRecurrence = async (transaction: Transaction, newValue: string, newProperty: string) => {
+  const handleAddRecurrence = async (newValue: string, newProperty: string) => {
+    if (!transaction) return false
+
     const response = await fetch(`/api/transactions/addRecurrenceToTransaction/${transaction._id}/${newValue}`)
       .then(response => response.json())
       .then(response => {
@@ -275,7 +285,9 @@ export function useEditTransactionDialog(mutate: ScopedMutator) {
       return response
   }
 
-  const handleRemoveRecurrence = async (transaction: Transaction, ) => {
+  const handleRemoveRecurrence = async () => {
+    if (!transaction) return false
+
     const response = await fetch(`/api/transactions/removeRecurrenceFromTransaction/${transaction.recurrenceParentId}`)
       .then(response => response.json())
       .then(response => {
@@ -302,10 +314,11 @@ export function useEditTransactionDialog(mutate: ScopedMutator) {
   }
 
   const handleUpdateTransaction = async (
-    transaction: Transaction, 
     value: string, property: 
     string
   ) => {
+    if (!transaction) return false
+
     //Update transaction and display/return result
     let id = transaction._id
     if (property === 'recurrenceFreq') {
@@ -341,7 +354,6 @@ export function useEditTransactionDialog(mutate: ScopedMutator) {
   
   const handleUpdateRecurringTransaction = async (
     editType: 'single' | 'future' | 'all', 
-    transaction?: Transaction | undefined, 
     newValue?: string, 
     property?: string
   ) => {
@@ -377,7 +389,6 @@ export function useEditTransactionDialog(mutate: ScopedMutator) {
   }
 
   const handleSubmit = async (
-    transaction: Transaction, 
     newValue: string, 
     property: string | undefined
   ) => {
@@ -399,13 +410,12 @@ export function useEditTransactionDialog(mutate: ScopedMutator) {
     
     //If not, just edit transaction
     else {
-      return handleUpdateTransaction(transaction, value, property)
+      return handleUpdateTransaction(value, property)
     }
 
   }
 
   const handleDelete = async (
-    transaction: Transaction | undefined, 
     editType?: 'single' | 'future' | 'all'
     ) => {
     if (!transaction) return false

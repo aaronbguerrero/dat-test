@@ -25,15 +25,15 @@ export interface Account {
 }
 
 export interface Transaction {
-  readonly _id: string | ObjectId,
+  readonly _id: ObjectId,
   title: string,
   date: Date,
   account: Account._id,
   allDay: boolean,
   amount: { amount: number, currency: Dinero.Currency },
   isRecurring?: boolean,
-  recurrenceId?: string,
+  recurrenceId?: ObjectId,
   recurrenceFreq?: string,
   recurrenceExclusions?: Date[],
-  recurrenceParentId?: string,
+  recurrenceParentId?: ObjectId,
 }

@@ -57,18 +57,26 @@ export default function Calendar ({ month, setMonth }: Props) {
   }
   
   const handleEventClick = (event: EventClickArg) => {
-    editTransactionDialog.open(transactions?.find( transaction => transaction._id === event.event._def.publicId))
+    editTransactionDialog.open(transactions?.find(transaction => transaction._id.toString() === event.event._def.publicId))
   }
   
-  const handleEventChange = (event: EventChangeArg) => {
-    if (event.event._def.extendedProps.recurrenceParentId) {
-      setRecurEditDialogEvent(event)
-      recurEditDialog.open()
+  const handleEventDateChange = (event: EventChangeArg) => {
+    if (
+      event.event._def.extendedProps.recurrenceParentId && 
+      event?.event?._instance?.range.start && 
+      event?.oldEvent?._instance?.range.start
+    ) {
+      recurEditDialog.open(
+        event.event._def.extendedProps.recurrenceParentId,
+        toBasicDateString(event.event._instance.range.start),
+        'date',
+        toBasicDateString(event.oldEvent._instance.range.start),
+      )
     }
-    else updateEvent(event)
+    else updateEventDate(event)
   }
   
-  const updateEvent = async (event: EventChangeArg) => {
+  const updateEventDate = async (event: EventChangeArg) => {
     const id = event.event._def.publicId
     const newDate = event.event._instance?.range.start.toISOString()
     
@@ -168,18 +176,24 @@ export default function Calendar ({ month, setMonth }: Props) {
           allDay: true,
         }
 
-        if (transaction._id) {
-          event.id =  transaction._id.toString()
-        } 
+        event.id = transaction._id.toString()
 
         if (transaction.amount.amount > 0) event.color = theme.palette.primary.main
         else event.color = theme.palette.tertiary.main
 
         event.extendedProps = { 
-          //TODO: Stop from crashing if amount is wrong in DB (in APIT?)
-          amount: Dinero({ amount: transaction.amount.amount, currency: transaction.amount.currency }),
-          ...transaction.isRecurring && { isRecurring: transaction.isRecurring },
-          ...transaction.recurrenceParentId && { recurrenceParentId: transaction.recurrenceParentId, recurrenceFreq: transaction.recurrenceFreq },
+          //TODO: Stop from crashing if amount is wrong in DB (in API?)
+          amount: Dinero({ 
+            amount: transaction.amount.amount, 
+            currency: transaction.amount.currency 
+          }),
+          ...transaction.isRecurring && { 
+            isRecurring: transaction.isRecurring 
+          },
+          ...transaction.recurrenceParentId && { 
+            recurrenceParentId: transaction.recurrenceParentId, 
+            recurrenceFreq: transaction.recurrenceFreq 
+          },
         }
 
         //Add event to array
@@ -213,7 +227,7 @@ export default function Calendar ({ month, setMonth }: Props) {
       <FullCalendar 
       dateClick={handleDateClick}
       events={events}
-      eventChange={handleEventChange}
+      eventChange={handleEventDateChange}
       eventClick={handleEventClick}
       eventContent={renderEventContent}
       //Have to close toast when drag starts to make sure drop callback is fired
