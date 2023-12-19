@@ -176,7 +176,7 @@ export default function AddTransactionDialog ({
             required
             />
 
-            <AccountSelector />
+            <AccountSelector required />
 
             <FormControlLabel 
             control={<Switch checked={isRecurring} color='secondary' />} 

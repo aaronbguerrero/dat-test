@@ -7,9 +7,9 @@ import type { Account } from "../../../types"
 import BasicToast, { useToast } from '../toasts/basicToast'
 import { useEffect, useState } from 'react'
 
-type Props = InputFieldProps
+export type AccountSelectorProps = InputFieldProps
 
-export default function AccountSelector ({ value, onChange, disabled }: Props) {
+export default function AccountSelector ({ value, onChange, disabled, required }: AccountSelectorProps) {
   const toast = useToast()
   
   //Get account data
@@ -36,6 +36,7 @@ export default function AccountSelector ({ value, onChange, disabled }: Props) {
         errorState={error}
         disabled={disabled}
         onChange={onChange}
+        required={required}
         >
           {accounts?.map(account => {
             return <MenuItem 

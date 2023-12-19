@@ -2,14 +2,14 @@ import { Box } from "@mui/material"
 import EditButton from "../buttons/editButton"
 import React, { ChangeEvent, ChangeEventHandler } from "react"
 import useEditable from "../../../lib/useEditable"
-import AccountSelector from "./accountSelector"
+import AccountSelector, { AccountSelectorProps } from "./accountSelector"
 import { Transaction } from "../../../types"
 
-type Props = {
-  value?: string,
-  id?: string,
+type Props = Omit<AccountSelectorProps, 'onSubmit'> & {
+  // value?: string,
+  // id?: string,
   onSubmit: (newValue: string, property: string | undefined) => Promise<boolean>,
-  disabled?: boolean,
+  // disabled?: boolean,
   isEditingFlag?: (isEditing: boolean) => void,
 }
 
@@ -17,7 +17,8 @@ export default function EditableAccountSelector ({
    value, 
    onSubmit, 
    disabled, 
-   isEditingFlag 
+   isEditingFlag,
+   required,
 }: Props) {
 
   const handleChange: ChangeEventHandler<HTMLInputElement> = (event: ChangeEvent<HTMLInputElement>) => {
@@ -41,6 +42,7 @@ export default function EditableAccountSelector ({
       disabled={!isEditable}
       value={internalValue}
       onChange={handleChange}
+      required={required}
       />
 
       <Box paddingX='1rem'>
