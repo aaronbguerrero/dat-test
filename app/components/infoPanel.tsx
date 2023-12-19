@@ -1,6 +1,7 @@
 'use client'
 
-import { Paper, Typography } from "@mui/material"
+import { CreditCardTwoTone } from "@mui/icons-material"
+import { Box, Divider, Paper, Tab, Table, TableBody, TableCell, TableRow, Tabs, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material"
 import Dinero, { Currency } from "dinero.js"
 import { useSession } from "next-auth/react"
 import React, { useEffect, useState } from "react"
@@ -104,6 +105,10 @@ export default function InfoPanel ({ month }: Props) {
 
   const schema = currencySchema(currencyUsed)
 
+  const handleAccountsChange = (test: string[]) => {
+    console.log(test)
+  }
+
   return (
     <Paper 
     sx={{ 
@@ -114,31 +119,91 @@ export default function InfoPanel ({ month }: Props) {
       alignItems: 'center',
       gap: '0.5rem',
     }}>
+      <Table size='small'>
+        <TableBody>
+          <TableRow>
+            <TableCell colSpan={2} align='center'>
+              {/* TODO: Add icon if not user set  */}
+              <EditableInputField 
+              label={`${(isFuture || !monthData?.userSetStartingAmount) ? 'Predicted' : ''} Starting Amount`}
+              id='startingAmount'
+              value={
+                isFuture ? 
+                Dinero({ amount: removeCurrencyFormat(lastMonthEndingAmount), currency: currencyUsed }).toFormat() 
+                : 
+                Dinero({ amount: monthData?.startingAmount.amount || 0, currency: currencyUsed }).toFormat()
+              } 
+              onSubmit={handleStartingAmountSubmit}
+              editable={isFuture ? false : true}
+              schema={schema}
+              />
+            </TableCell>
+          </TableRow>
 
-      {/* TODO: Add icon if not user set  */}
-      <EditableInputField 
-      label={`${(isFuture || !monthData?.userSetStartingAmount) ? 'Predicted' : ''} Starting Amount`}
-      id='startingAmount'
-      value={
-        isFuture ? 
-        Dinero({ amount: removeCurrencyFormat(lastMonthEndingAmount), currency: currencyUsed }).toFormat() 
-        : 
-        Dinero({ amount: monthData?.startingAmount.amount || 0, currency: currencyUsed }).toFormat()
-      } 
-      onSubmit={handleStartingAmountSubmit}
-      editable={isFuture ? false : true}
-      schema={schema}
-      />
+          <TableRow>
+            <TableCell>Today&apos;s Balance</TableCell>
+            <TableCell align="right">$2344</TableCell>
+          </TableRow>
 
-      {/* TODO: Cash today */}
-      <Typography variant='subtitle2'>{`End of Month Cash:`}</Typography>
+          <TableRow>
+            <TableCell>Total Income</TableCell>
+            <TableCell align="right">$2344</TableCell>
+          </TableRow>
+          <TableRow>
+
+            <TableCell>Total Expenses</TableCell>
+            <TableCell align="right">$2344</TableCell>
+          </TableRow>
+
+          <TableRow>
+            <TableCell>Balance at End of Month</TableCell>
+            <TableCell align="right">{Dinero({ amount: removeCurrencyFormat(endingAmount), currency: currencyUsed }).toFormat()}</TableCell>
+          </TableRow>
+
+<TableRow>
+<TableCell colSpan={2} align='center'>
+
+          <Divider color='red' /> 
+</TableCell>
+</TableRow>
+
+          <TableRow>
+            <TableCell>Needed on First Day of Next Month</TableCell>
+            <TableCell align="right">$2344</TableCell>
+          </TableRow>
+
+          <TableRow>
+            <TableCell>You&apos;ve spent this much on credit cards this month</TableCell>
+            <TableCell align="right">$2344</TableCell>
+          </TableRow>
+
+          <TableRow>
+            {/* TODO: Remove "forecasted" in the past */}
+            <TableCell>You&apos;re forcasted to pay this much back to credit cards this month</TableCell>
+            <TableCell align="right">$2344</TableCell>
+          </TableRow>
+
+          <TableRow>
+            {/* TODO: Remove "forecasted" in the past */}
+            <TableCell>Total added/removed from debt</TableCell>
+            <TableCell align="right">$2344</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+
+      {/* <Typography variant='subtitle2'>{`End of Month Cash:`}</Typography>
       <Typography variant='h6'>{Dinero({ amount: removeCurrencyFormat(endingAmount), currency: currencyUsed }).toFormat()}</Typography>
       
-      {/* <Typography>This month you're predicting to pay: $XXX towards credit card debt.</Typography>
-      <Typography>This month you're forecasted to spend: $XXX on credit cards.</Typography>
-      <Typography>Total Added/Paid on Credit Cards:</Typography> */}
+      <Typography variant='subtitle2'>Today's Balance: </Typography>
+      
+      <Typography variant='subtitle2'>Needed next month: </Typography>
+      
+      <Typography variant='subtitle2'>This month you're predicting to pay: $XXX towards credit card debt.</Typography>
+      <Typography variant='subtitle2'>This month you're forecasted to spend: $XXX on credit cards.</Typography>
+    <Typography variant='subtitle2'>Total Added/Paid on Credit Cards:</Typography> */}
+
 
       <BasicToast {...toast} />
-  </Paper>
+    </Paper>
   )
 }
