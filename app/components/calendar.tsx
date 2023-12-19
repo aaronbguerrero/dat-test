@@ -48,6 +48,7 @@ export default function Calendar ({ month, setMonth }: Props) {
   }, [calendarApi, month])
   
   const [events, setEvents] = useState<EventInput[]>([])
+  const [eventToRevert, setEventToRevert] = useState<EventChangeArg>()
    
   //Click event handlers
   const handleDateClick = (clickedDate: DateClickArg) => {
@@ -57,18 +58,32 @@ export default function Calendar ({ month, setMonth }: Props) {
   }
   
   const handleEventClick = (event: EventClickArg) => {
-    editTransactionDialog.open(transactions?.find( transaction => transaction._id === event.event._def.publicId))
+    editTransactionDialog.open(
+      transactions?.find(transaction => transaction._id.toString() === event.event._def.publicId)
+    )
   }
   
-  const handleEventChange = (event: EventChangeArg) => {
-    if (event.event._def.extendedProps.recurrenceParentId) {
-      setRecurEditDialogEvent(event)
-      recurEditDialog.open()
+  const handleEventDateChange = (event: EventChangeArg) => {
+    setEventToRevert(event)
+
+    if (
+      event.event._def.extendedProps.recurrenceParentId && 
+      event?.event?._instance?.range.start && 
+      event?.oldEvent?._instance?.range.start
+    ) {
+      recurEditDialog.open(
+        transactions?.find(
+          transaction => transaction._id.toString() === event.event.id
+        ),
+        toBasicDateString(event.event._instance.range.start),
+        'date',
+        toBasicDateString(event.oldEvent._instance.range.start),
+      )
     }
-    else updateEvent(event)
+    else updateEventDate(event)
   }
   
-  const updateEvent = async (event: EventChangeArg) => {
+  const updateEventDate = async (event: EventChangeArg) => {
     const id = event.event._def.publicId
     const newDate = event.event._instance?.range.start.toISOString()
     
@@ -77,49 +92,59 @@ export default function Calendar ({ month, setMonth }: Props) {
     .then(response => {
       if (response === true) {
         mutate(`/api/transactions/getTransactions/${month}`)
+        //TODO: Update month ending amount (should rethink this piece)
         
         toast.open("Transaction(s) updated successfully!", 'success')
       }
       else {
         mutate(`/api/transactions/getTransactions/${month}`)
+
+        eventToRevert?.revert()
+        setEventToRevert(undefined)
         
         toast.open('Sorry! There was a problem updating the transaction(s). Please try again.', 'error')
       }
     })
   }
 
-  const updateRecurringEvent = async (editType: 'single' | 'future' | 'all') => {
-    if (recurEditDialogEvent?.event._instance && recurEditDialogEvent?.oldEvent._instance) {
-      const parentId = recurEditDialogEvent.event._def.extendedProps.recurrenceParentId
-      const originalDate = toBasicDateString(recurEditDialogEvent.oldEvent._instance.range.start)
-      const newDate = toBasicDateString(recurEditDialogEvent.event._instance.range.start)
-      
-      const response = await fetch(`/api/transactions/updateRecurringTransaction/${editType}/${parentId}/${originalDate}/date/${newDate}`)
-      .then(response => response.json())
-      .then(response => {
-        if (response === true) {
-          mutate(`/api/transactions/getTransactions/${month}`)
-          
-          toast.open("Transaction(s) updated successfully!", 'success')
+  const updateRecurringEventDate = async (
+    editType: 'single' | 'future' | 'all', 
+    newDate?: string, 
+    property?: string, 
+    transaction?: Transaction, 
+    originalDate?: string,
+  ) => {
+    const response = await fetch(`/api/transactions/updateRecurringTransaction/${editType}/${transaction}/${originalDate}/${property}/${newDate}`)
+    .then(response => response.json())
+    .then(response => {
+      if (response === true) {
+        mutate(`/api/transactions/getTransactions/${month}`)
+        
+        toast.open("Transaction(s) updated successfully!", 'success')
 
-          return true
-        }
+        return true
+      }
 
-        else {
-          mutate(`/api/transactions/getTransactions/${month}`)
-          
-          toast.open('Sorry! There was a problem updating the transaction(s). Please try again.', 'error')
-          
-          return false
-        }
-      })
+      else {
+        eventToRevert?.revert()
+        setEventToRevert(undefined)
 
-      return response
-    }
+        mutate(`/api/transactions/getTransactions/${month}`)
+        
+        toast.open('Sorry! There was a problem updating the transaction(s). Please try again.', 'error')
+        
+        return false
+      }
+    })
 
-    return false
+    return response
   }
-  
+
+  const handleCancelUpdateRecurringEvent = () => {
+    eventToRevert?.revert()
+    setEventToRevert(undefined)
+  }
+
   //TODO: Render recurring events on top of each day
 
   // Event content and tooltips
@@ -145,13 +170,7 @@ export default function Calendar ({ month, setMonth }: Props) {
     )
   }
   
-  const [recurEditDialogEvent, setRecurEditDialogEvent] = useState<EventChangeArg>()
-
-  const handleCancelUpdateRecurringEvent = () => {
-    recurEditDialogEvent?.revert()
-  }
-  
-  const recurEditDialog = useRecurEditDialog(updateRecurringEvent, handleCancelUpdateRecurringEvent)
+  const recurEditDialog = useRecurEditDialog(updateRecurringEventDate, handleCancelUpdateRecurringEvent)
   
   //Mutate Transactions to FullCalendar events
   useEffect(() => {
@@ -159,7 +178,7 @@ export default function Calendar ({ month, setMonth }: Props) {
       const newEvents: EventInput[] = []
       
       transactions.forEach((transaction: Transaction) => {
-        if (!transaction.amount.amount || !transaction.amount.currency) return
+        if (transaction.amount.amount ===  null || transaction.amount.currency === null) return
 
         //Create FullCalendar event
         const event: EventInput = {
@@ -168,18 +187,24 @@ export default function Calendar ({ month, setMonth }: Props) {
           allDay: true,
         }
 
-        if (transaction._id) {
-          event.id =  transaction._id.toString()
-        } 
+        event.id = transaction._id.toString()
 
         if (transaction.amount.amount > 0) event.color = theme.palette.primary.main
         else event.color = theme.palette.tertiary.main
 
         event.extendedProps = { 
-          //TODO: Stop from crashing if amount is wrong in DB (in APIT?)
-          amount: Dinero({ amount: transaction.amount.amount, currency: transaction.amount.currency }),
-          ...transaction.isRecurring && { isRecurring: transaction.isRecurring },
-          ...transaction.recurrenceParentId && { recurrenceParentId: transaction.recurrenceParentId, recurrenceFreq: transaction.recurrenceFreq },
+          //TODO: Stop from crashing if amount is wrong in DB (in API?)
+          amount: Dinero({ 
+            amount: transaction.amount.amount, 
+            currency: transaction.amount.currency 
+          }),
+          ...transaction.isRecurring && { 
+            isRecurring: transaction.isRecurring 
+          },
+          ...transaction.recurrenceParentId && { 
+            recurrenceParentId: transaction.recurrenceParentId, 
+            recurrenceFreq: transaction.recurrenceFreq 
+          },
         }
 
         //Add event to array
@@ -213,7 +238,7 @@ export default function Calendar ({ month, setMonth }: Props) {
       <FullCalendar 
       dateClick={handleDateClick}
       events={events}
-      eventChange={handleEventChange}
+      eventChange={handleEventDateChange}
       eventClick={handleEventClick}
       eventContent={renderEventContent}
       //Have to close toast when drag starts to make sure drop callback is fired

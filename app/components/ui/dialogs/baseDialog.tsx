@@ -1,12 +1,9 @@
-import React, { ReactNode, useState } from "react"
-import { Dialog, DialogProps, SxProps } from "@mui/material"
+import React, {  useState } from "react"
+import { Dialog, DialogProps } from "@mui/material"
 
-export interface BaseDialogProps {
-  children?: ReactNode,
-  props?: DialogProps,
+export type BaseDialogProps = Omit<DialogProps, 'open' | 'onSubmit'> & {
   onClose: () => void,
   borderColor?: string,
-  sx?: SxProps,
   isOpen: boolean,
   open: () => void,
   close: () => void,

@@ -8,7 +8,7 @@ import BaseDialog, { BaseDialogProps, useDialog } from "./baseDialog"
 import { useState } from "react"
 import SpinnerBackdrop from "../spinnerBackdrop"
 
-export type SubmittableDialogProps = { 
+export type SubmittableDialogProps = Omit<BaseDialogProps, 'open' | 'close' | 'dialogProps' | 'onSubmit'> & { 
   dialogProps: BaseDialogProps, 
   onSubmit: () => Promise<boolean>,
   title?: string,
@@ -99,7 +99,6 @@ export default function SubmittableDialog ({
 export function useSubmittableDialog (onSubmit: () => Promise<boolean>, onCancel?: () => void) {
   const dialogHook = useDialog()
 
-
   const handleOpen = () => {
     dialogHook.open()
   }
@@ -111,6 +110,7 @@ export function useSubmittableDialog (onSubmit: () => Promise<boolean>, onCancel
   }
 
   const dialogProps: SubmittableDialogProps = {
+    ...dialogHook,
     dialogProps: dialogHook,
     onSubmit: onSubmit,
     open: handleOpen,
