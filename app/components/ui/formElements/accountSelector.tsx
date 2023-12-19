@@ -7,10 +7,7 @@ import type { Account } from "../../../types"
 import BasicToast, { useToast } from '../toasts/basicToast'
 import { useEffect, useState } from 'react'
 
-type Props = InputFieldProps & {
-  // value?: string,
-  // disabled?: boolean,
-}
+type Props = InputFieldProps
 
 export default function AccountSelector ({ value, onChange, disabled }: Props) {
   const toast = useToast()
