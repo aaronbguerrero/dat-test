@@ -15,14 +15,15 @@ export default function EditableColorPicker ({
   disabled, 
   isEditingFlag,
   required,
+  id,
 }: Props) {
 
-  const handleChange: ChangeEventHandler<HTMLInputElement> = (event: ChangeEvent<HTMLInputElement>) => {
-    onChange(event.target.value)  
+  const handleChange = (value: string) => {
+    onChange(value)  
   }
 
   const handleSubmit = (value: string) => {
-    return onSubmit(value, 'account')
+    return onSubmit(value, id)
   }
 
   const { 
@@ -35,11 +36,13 @@ export default function EditableColorPicker ({
   return (
     <Box display='flex' alignItems='center' justifyContent='space-between' width='100%'>
       <MuiColorInput
-       value={internalValue} 
-       format='hex' 
-       required={required}
-       sx={{width: 'auto'}}
-       disabled={disabled || !isEditable}
+      id={id}
+      value={internalValue} 
+      format='hex' 
+      required={required}
+      sx={{width: 'auto'}}
+      disabled={disabled || !isEditable}
+      onChange={handleChange}
        />
 
       <Box paddingX='1rem'>

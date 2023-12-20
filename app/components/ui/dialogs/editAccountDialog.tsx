@@ -9,11 +9,14 @@ import { accountTypes } from '../../../lib/accountTypes'
 import type { Account, AccountType } from "../../../types"
 import toPrettyAccountType from "../../../lib/toPrettyAccountType"
 import EditableColorPicker from "../formElements/editableColorPicker"
+import { ModifyResult } from "mongodb"
 
 interface EditAccountDialogProps {
   dialogProps: BaseDialogProps,
   account?: Account,
   open: (account: Account) => void,
+  handleSubmit: (newValue: string, property: string | undefined) => Promise<boolean>,
+  handleDelete: () => Promise<boolean>,
   title: string,
   handleTitleChange: (event: ChangeEvent<HTMLInputElement>) => void,
   type: AccountType,
@@ -26,6 +29,8 @@ export default function EditAccountDialog ({
   dialogProps, 
   account,
   title,
+  handleSubmit,
+  handleDelete,
   handleTitleChange,
   type, 
   handleTypeChange, 
@@ -38,48 +43,40 @@ export default function EditAccountDialog ({
     <BaseDialog title="Edit Account" {...dialogProps}>
       <Box display='flex' flexDirection='column' gap={2} paddingTop={1}>
           <EditableInputField 
-          id='accountName'
+          id='title'
           label="Account Name"
           value={title}
-          onSubmit={async () => {return true}}
+          onSubmit={handleSubmit}
           />
 
-        <EditableSelect 
-        label="Account Type"
-        value={account.type}
-        onSubmit={async (newValue: string, property: string | undefined) => {return true}}
-        >
-          {accountTypes.map(type => {
-            return <MenuItem 
-            value={type}
-            key={type}
-            >
-              {toPrettyAccountType(type)}
-            </MenuItem>
-          })}
-        </EditableSelect>
-        
-        <EditableInputField 
-        id='accountName'
-        label="Account Name"
-        value={title}
-        onSubmit={async () => {return true}}
-        />
+          <EditableSelect 
+          id={'type'}
+          label="Account Type"
+          value={account.type}
+          onSubmit={handleSubmit}
+          >
+            {accountTypes.map(type => {
+              return <MenuItem 
+              value={type}
+              key={type}
+              >
+                {toPrettyAccountType(type)}
+              </MenuItem>
+            })}
+          </EditableSelect>
 
-        <EditableColorPicker 
-        value={account.color} 
-        format='hex' 
-        onSubmit={async (newValue: string, property: string | undefined) => {return true}}
-        />
+          <EditableColorPicker 
+          id={'color'}
+          value={account.color} 
+          format='hex' 
+          onSubmit={handleSubmit}
+          />
 
-        {/* <MuiColorInput value={account.color} format='hex' /> */}
-        <EditableColorPicker 
-        value={account.color} 
-        format='hex' 
-        onSubmit={async (newValue: string, property: string | undefined) => {return true}}
-        />
-
-          <Button color='error' variant='contained'>
+          <Button 
+          color='error' 
+          variant='contained'
+          onClick={handleDelete}
+          >
             <DeleteTwoTone />
             Delete Account
           </Button>
@@ -88,7 +85,10 @@ export default function EditAccountDialog ({
   )
 }
 
-export function useEditAccountDialog () {
+export function useEditAccountDialog (
+  onSubmit: (account: Account, newValue: string, property: string | undefined) => Promise<ModifyResult<Account>>,
+  onDelete: () => Promise<boolean>
+) {
   const [account, setAccount] = useState<Account>()
   
   const [title, setTitle] = useState(account?.title || '')
@@ -112,6 +112,22 @@ export function useEditAccountDialog () {
     dialogHook.open()
   }
 
+  const handleSubmit = async (newValue: string, property: string | undefined) => {
+    if (!account) return false
+    
+    const response = await onSubmit(account, newValue, property)
+
+    if (response.ok === 1) {
+      setAccount(response.value as Account)
+      return true
+    }
+    else return false
+  }
+
+  const handleDelete = async () => {
+    return await onDelete()
+  }
+
   useEffect(() => {
     if (account) {
       setTitle(account.title)
@@ -126,6 +142,8 @@ export function useEditAccountDialog () {
     dialogProps: dialogHook,
     account: account,
     open: handleOpen,
+    handleSubmit: handleSubmit,
+    handleDelete: handleDelete,
     title: title,
     handleTitleChange: handleTitleChange,
     type: type,

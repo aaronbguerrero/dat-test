@@ -8,6 +8,7 @@ import EditAccountDialog, { useEditAccountDialog } from "../ui/dialogs/editAccou
 import AccountIcon from "../ui/accountIcon"
 
 import type { Account, AccountType } from "../../types"
+import { ModifyResult } from "mongodb"
 
 export default function AccountsCard ({}) {
   const toast = useToast()
@@ -50,7 +51,27 @@ export default function AccountsCard ({}) {
     editAccountDialog.open(account)
   }
   
-  const editAccountDialog = useEditAccountDialog()
+  const handleEditAccount = async (account: Account, newValue: string, property: string | undefined) => {
+    return await fetch(`/api/accounts/updateAccount/${account._id}/${property}/${encodeURIComponent(newValue)}`)
+    .then(response => response.json())
+    .then(response => {
+      if (response.ok === 1) {
+        mutate()
+
+        toast.open("Account edited successfully!", 'success')
+      }
+      else toast.open("Sorry! There was a problem editing the account, please try again.", 'error')
+      
+      return response as Promise<ModifyResult<Account>>
+    })
+  }
+
+  const handleDeleteAccount = async () => {
+    console.log("DELETE ACCOUNT")
+    return true
+  }
+  
+  const editAccountDialog = useEditAccountDialog(handleEditAccount, handleDeleteAccount)
 
   return (
     <Card
