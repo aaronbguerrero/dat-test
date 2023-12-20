@@ -3,12 +3,13 @@ import { ObjectId } from "mongodb"
 import { ChangeEvent, useEffect, useState } from "react"
 import EditableInputField from "../formElements/editableInputField"
 import BaseDialog, { BaseDialogProps, useDialog } from "./baseDialog"
-import { MuiColorInput } from 'mui-color-input'
 import { DeleteTwoTone } from "@mui/icons-material"
 import EditableSelect from "../formElements/editableSelect"
 import { accountTypes } from '../../../lib/accountTypes'
 
 import type { Account, AccountType } from "../../../types"
+import toPrettyAccountType from "../../../lib/toPrettyAccountType"
+import EditableColorPicker from "../formElements/editableColorPicker"
 
 interface EditAccountDialogProps {
   dialogProps: BaseDialogProps,
@@ -36,41 +37,43 @@ export default function EditAccountDialog ({
   if (!account) return null
 
   return (
-    <BaseDialog {...dialogProps}>
-      <DialogContent>
-        <DialogTitle>
-          Edit Account
-        </DialogTitle>
+    <BaseDialog title="Edit Account" {...dialogProps}>
+      <Box display='flex' flexDirection='column' gap={2} paddingTop={1}>
+        <EditableInputField 
+        id='accountName'
+        label="Account Name"
+        value={title}
+        onSubmit={async () => {return true}}
+        />
 
-        <Box display='flex' flexDirection='column' gap={2}>
-          <EditableInputField 
-          id='accountName'
-          label="Account Name"
-          value={title}
-          onSubmit={async () => {return true}}
-          />
+        <EditableSelect 
+        label="Account Type"
+        value={account.type}
+        onSubmit={async (newValue: string, property: string | undefined) => {return true}}
+        >
+          {accountTypes.map(type => {
+            return <MenuItem 
+            value={type}
+            key={type}
+            >
+              {toPrettyAccountType(type)}
+            </MenuItem>
+          })}
+        </EditableSelect>
+        
 
-          <EditableSelect value={account.type}>
-      {/* {console.log(accountTypes)} */}
-            {accountTypes.map(type => {
-              return <MenuItem 
-              value={type}
-              key={type}
-              >
-                {type}
-              </MenuItem>
-            })}
-          </EditableSelect>
-          
+        {/* <MuiColorInput value={account.color} format='hex' /> */}
+        <EditableColorPicker 
+        value={account.color} 
+        format='hex' 
+        onSubmit={async (newValue: string, property: string | undefined) => {return true}}
+        />
 
-          <MuiColorInput value={account.color} format='hex' />
-
-          <Button color='error' variant='contained'>
-            <DeleteTwoTone />
-            Delete Account
-          </Button>
-        </Box>
-      </DialogContent>
+        <Button color='error' variant='contained'>
+          <DeleteTwoTone />
+          Delete Account
+        </Button>
+      </Box>
     </BaseDialog>
   )
 }
