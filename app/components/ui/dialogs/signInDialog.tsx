@@ -25,43 +25,39 @@ export default function SignInDialog ({ dialogProps, open, close }: SignInDialog
   }
   
   return (
-    <BaseDialog {...dialogProps}>
-      <DialogTitle align='center' color='secondary'>Sign In</DialogTitle>
-
-      <DialogContent>
-        <Box 
-        display='flex' 
+    <BaseDialog title='Sign In' {...dialogProps}>
+      <Box 
+      display='flex' 
+      flexDirection='column'
+      gap='0.5rem'
+      padding='0.5rem'
+      >
+        <Box
+        component='form'
+        display='flex'
         flexDirection='column'
         gap='0.5rem'
-        padding='0.5rem'
+        onSubmit={onEmailSubmit}
         >
-          <Box
-          component='form'
-          display='flex'
-          flexDirection='column'
-          gap='0.5rem'
-          onSubmit={onEmailSubmit}
+          <TextField 
+          label="Email Address" 
+          id="email"
+          />
+
+          <Button 
+          variant='contained' 
+          color='primary' 
+          type='submit'
           >
-            <TextField 
-            label="Email Address" 
-            id="email"
-            />
-
-            <Button 
-            variant='contained' 
-            color='primary' 
-            type='submit'
-            >
-              One-Time Passcode
-            </Button>
-          </Box>
-
-          <Divider />
-
-          <Button color='secondary' onClick={() => signIn('google')}>Google</Button>
-
+            One-Time Passcode
+          </Button>
         </Box>
-      </DialogContent>
+
+        <Divider />
+
+        <Button color='secondary' onClick={() => signIn('google')}>Google</Button>
+
+      </Box>
     </BaseDialog>
   )
 }

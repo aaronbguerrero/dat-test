@@ -1,5 +1,4 @@
-import { Button, Box, SelectChangeEvent, MenuItem, DialogContent, DialogTitle } from "@mui/material"
-import { ObjectId } from "mongodb"
+import { Button, Box, SelectChangeEvent, MenuItem } from "@mui/material"
 import { ChangeEvent, useEffect, useState } from "react"
 import EditableInputField from "../formElements/editableInputField"
 import BaseDialog, { BaseDialogProps, useDialog } from "./baseDialog"
@@ -23,7 +22,6 @@ interface EditAccountDialogProps {
   handleColorChange: (color: string) => void,
 }
 
-//TODO: MOVE FROM SUBMITTABLE to basedialog???
 export default function EditAccountDialog ({ 
   dialogProps, 
   account,
@@ -39,12 +37,12 @@ export default function EditAccountDialog ({
   return (
     <BaseDialog title="Edit Account" {...dialogProps}>
       <Box display='flex' flexDirection='column' gap={2} paddingTop={1}>
-        <EditableInputField 
-        id='accountName'
-        label="Account Name"
-        value={title}
-        onSubmit={async () => {return true}}
-        />
+          <EditableInputField 
+          id='accountName'
+          label="Account Name"
+          value={title}
+          onSubmit={async () => {return true}}
+          />
 
         <EditableSelect 
         label="Account Type"
@@ -61,6 +59,14 @@ export default function EditAccountDialog ({
           })}
         </EditableSelect>
         
+=======
+          <EditableInputField 
+          id='accountName'
+          label="Account Name"
+          value={title}
+          onSubmit={async () => {return true}}
+          />
+>>>>>>> master
 
         {/* <MuiColorInput value={account.color} format='hex' /> */}
         <EditableColorPicker 
@@ -69,11 +75,18 @@ export default function EditAccountDialog ({
         onSubmit={async (newValue: string, property: string | undefined) => {return true}}
         />
 
-        <Button color='error' variant='contained'>
-          <DeleteTwoTone />
-          Delete Account
-        </Button>
-      </Box>
+        {/* <MuiColorInput value={account.color} format='hex' /> */}
+        <EditableColorPicker 
+        value={account.color} 
+        format='hex' 
+        onSubmit={async (newValue: string, property: string | undefined) => {return true}}
+        />
+
+          <Button color='error' variant='contained'>
+            <DeleteTwoTone />
+            Delete Account
+          </Button>
+        </Box>
     </BaseDialog>
   )
 }

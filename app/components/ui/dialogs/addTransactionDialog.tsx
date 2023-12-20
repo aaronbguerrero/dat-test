@@ -133,29 +133,32 @@ export default function AddTransactionDialog ({
   return (
     <>
       <BaseDialog 
-      borderColor={(transactionType === 'expense') ? theme.palette.tertiary.main : theme.palette.primary.main}
+      title='Create Transaction'
+      borderColor={
+        (transactionType === 'expense') ? 
+        theme.palette.tertiary.main 
+        : 
+        theme.palette.primary.main
+      }
       {...dialogProps}
       >
         <SpinnerBackdrop isLoading={isLoading} />
         
-        <DialogTitle>Create Transaction</DialogTitle>
-
-        <DialogContent sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2,
-        }}>
+        <Box
+        display='flex'
+        flexDirection='column'
+        gap={2}
+        >
           <DialogContentText>{toPrettyDateString(date)}</DialogContentText>
 
           <Box 
           component='form' 
           onSubmit={handleSubmit}
-          sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-            alignItems: 'center',
-          }}>
+          display='flex'
+          flexDirection='column'
+          gap={2}
+          alignItems='center'
+          >
             <ExpenseIncomeButtons 
             value={transactionType} 
             onChange={handleSetTransactionType} 
@@ -205,7 +208,7 @@ export default function AddTransactionDialog ({
               Create Transaction
             </Button>
           </Box>
-        </DialogContent>
+        </Box>
       </BaseDialog>
 
       <BasicToast {...toast} />
