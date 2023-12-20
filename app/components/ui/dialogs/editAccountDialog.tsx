@@ -1,5 +1,4 @@
-import { Button, Box, SelectChangeEvent, MenuItem, DialogContent, DialogTitle } from "@mui/material"
-import { ObjectId } from "mongodb"
+import { Button, Box, SelectChangeEvent, MenuItem } from "@mui/material"
 import { ChangeEvent, useEffect, useState } from "react"
 import EditableInputField from "../formElements/editableInputField"
 import BaseDialog, { BaseDialogProps, useDialog } from "./baseDialog"
@@ -22,7 +21,6 @@ interface EditAccountDialogProps {
   handleColorChange: (color: string) => void,
 }
 
-//TODO: MOVE FROM SUBMITTABLE to basedialog???
 export default function EditAccountDialog ({ 
   dialogProps, 
   account,
@@ -36,13 +34,8 @@ export default function EditAccountDialog ({
   if (!account) return null
 
   return (
-    <BaseDialog {...dialogProps}>
-      <DialogContent>
-        <DialogTitle>
-          Edit Account
-        </DialogTitle>
-
-        <Box display='flex' flexDirection='column' gap={2}>
+    <BaseDialog title="Edit Account" {...dialogProps}>
+      <Box display='flex' flexDirection='column' gap={2} paddingTop={1}>
           <EditableInputField 
           id='accountName'
           label="Account Name"
@@ -70,7 +63,6 @@ export default function EditAccountDialog ({
             Delete Account
           </Button>
         </Box>
-      </DialogContent>
     </BaseDialog>
   )
 }

@@ -81,16 +81,8 @@ export default function EditTransactionDialog ({
   return (
     <>
       <BaseDialog 
-      borderColor={
-        (transaction.amount.amount < 0) 
-        ? 
-        theme.palette.tertiary.main 
-        : 
-        theme.palette.primary.main
-      }
-      {...dialogProps}
-      >
-        <DialogTitle display={'flex'} alignItems='center'>
+      title={
+        <Stack direction='row' alignItems='center'> 
           {transaction.title}
 
           {(
@@ -103,12 +95,19 @@ export default function EditTransactionDialog ({
               sx={{ marginLeft: '1rem' }} 
               />
             </Tooltip>
-          )}  
-        </DialogTitle>
-
-        <Divider />
-
-        <Stack spacing={2} padding='1rem' overflow='hidden'>
+          )}
+        </Stack>
+      }
+      borderColor={
+        (transaction.amount.amount < 0) 
+        ? 
+        theme.palette.tertiary.main 
+        : 
+        theme.palette.primary.main
+      }
+      {...dialogProps}
+      >
+        <Stack spacing={2} overflow='hidden'>
           <ExpenseIncomeButtons 
           value={(transaction.amount.amount < 0) ? 'expense' : 'income'} 
           onChange={handleTypeChange}

@@ -1,12 +1,14 @@
-import React, {  useState } from "react"
-import { Dialog, DialogProps } from "@mui/material"
+import React, { ReactNode, useState } from "react"
+import { Box, Dialog, DialogContent, DialogProps, DialogTitle, IconButton } from "@mui/material"
+import { CloseTwoTone } from "@mui/icons-material"
 
-export type BaseDialogProps = Omit<DialogProps, 'open' | 'onSubmit'> & {
+export type BaseDialogProps = Omit<DialogProps, 'open' | 'onSubmit' | 'title'> & {
   onClose: () => void,
   borderColor?: string,
   isOpen: boolean,
   open: () => void,
   close: () => void,
+  title?: ReactNode,
 }
 
 export default function BaseDialog ({ 
@@ -15,6 +17,7 @@ export default function BaseDialog ({
   isOpen, 
   open,
   close,
+  title,
   ...props
 }: BaseDialogProps) {
   return (
@@ -29,7 +32,21 @@ export default function BaseDialog ({
     }}
     {...props}
     >
-      {children}
+      <DialogTitle>
+        <Box display="flex" alignItems="center">
+          <Box flexGrow={1}>{title}</Box>
+
+          <Box>
+            <IconButton onClick={close}>
+              <CloseTwoTone />
+            </IconButton>
+          </Box>
+        </Box>
+      </DialogTitle>
+
+      <DialogContent>
+        {children}
+      </DialogContent>
     </Dialog>
     
   )

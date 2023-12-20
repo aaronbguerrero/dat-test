@@ -11,7 +11,6 @@ import SpinnerBackdrop from "../spinnerBackdrop"
 export type SubmittableDialogProps = Omit<BaseDialogProps, 'open' | 'close' | 'dialogProps' | 'onSubmit'> & { 
   dialogProps: BaseDialogProps, 
   onSubmit: () => Promise<boolean>,
-  title?: string,
   children?: React.ReactNode,
   actionLabel?: string,
   cancelLabel?: string,
@@ -54,44 +53,35 @@ export default function SubmittableDialog ({
   }
 
   return (
-    <BaseDialog borderColor={borderColor} {...dialogProps} onClose={close}>
+    <BaseDialog title={title} borderColor={borderColor} {...dialogProps} onClose={close}>
         <SpinnerBackdrop isLoading={isLoading || false} />
 
-        <DialogContent> 
-          {
-            title &&
-            <DialogTitle marginBottom='1rem'>
-              {title}
-            </DialogTitle>
-          }
-
-          <Box display='flex' flexDirection='column' alignItems='center' gap={2}>
-            <Box>
-              {children}
-            </Box>
-
-            <Box display='flex' gap={2} marginTop='1rem' width='100%'>
-              <Button 
-              color={cancelColor || 'error'} 
-              variant='contained' 
-              onClick={close} 
-              fullWidth
-              >
-                {cancelLabel || "Cancel"}
-              </Button>
-
-              <Button 
-              disabled={submitDisabled}
-              color={actionColor || 'secondary'} 
-              variant='contained' 
-              onClick={handleSubmit} 
-              fullWidth
-              >
-                {actionLabel || "Submit"}
-              </Button>
-            </Box>
+        <Box display='flex' flexDirection='column' alignItems='center' gap={2}>
+          <Box>
+            {children}
           </Box>
-        </DialogContent>
+
+          <Box display='flex' gap={2} marginTop='1rem' width='100%'>
+            <Button 
+            color={cancelColor || 'error'} 
+            variant='contained' 
+            onClick={close} 
+            fullWidth
+            >
+              {cancelLabel || "Cancel"}
+            </Button>
+
+            <Button 
+            disabled={submitDisabled}
+            color={actionColor || 'secondary'} 
+            variant='contained' 
+            onClick={handleSubmit} 
+            fullWidth
+            >
+              {actionLabel || "Submit"}
+            </Button>
+          </Box>
+        </Box>
       </BaseDialog>
   )
 }
