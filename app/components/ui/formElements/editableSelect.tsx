@@ -17,6 +17,7 @@ export default function EditableSelect ({
   disabled, 
   isEditingFlag,
   required,
+  id,
 }: Props) {
 
   const handleChange: ChangeEventHandler<HTMLInputElement> = (event: ChangeEvent<HTMLInputElement>) => {
@@ -24,7 +25,7 @@ export default function EditableSelect ({
   }
 
   const handleSubmit = (value: string) => {
-    return onSubmit(value, 'account')
+    return onSubmit(value, id)
   }
 
   const { 
@@ -37,6 +38,7 @@ export default function EditableSelect ({
   return (
     <Box display='flex' alignItems='center' justifyContent='space-between' width='100%'>
       <InputField
+      id={id}
       select
       disabled={!isEditable}
       value={internalValue}
