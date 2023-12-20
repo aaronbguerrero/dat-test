@@ -12,7 +12,7 @@ import type { Account, AccountType } from "../../types"
 export default function AccountsCard ({}) {
   const toast = useToast()
   
-  const {data: accounts, error: accountsError } = useSWR<Account[]>(`/api/accounts/getAccounts`)
+  const {data: accounts, error: accountsError, mutate } = useSWR<Account[]>(`/api/accounts/getAccounts`)
   if (accountsError) toast.open("Sorry! There was a problem loading the month data. Please refresh the page.", 'error')
   
   const [isAccountsLoading, setIsAccountsLoading] = useState(true)
@@ -31,7 +31,10 @@ export default function AccountsCard ({}) {
     .then(response => response.json())
     .then(response => {
       if (response.acknowledged === true) {
+        mutate()
+
         toast.open("Account added successfully!", 'success')
+
         return true
       }
       else {
@@ -77,7 +80,7 @@ export default function AccountsCard ({}) {
             key={account._id.toString()}
             onClick={() => handleEditAccountClick(account)}
             >
-              <ListItemIcon>
+              <ListItemIcon sx={{ color: account.color }}>
                 <AccountIcon type={account.type} />
               </ListItemIcon>
 

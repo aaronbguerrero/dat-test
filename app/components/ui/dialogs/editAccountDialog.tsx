@@ -2,12 +2,13 @@ import { Button, Box, SelectChangeEvent, MenuItem } from "@mui/material"
 import { ChangeEvent, useEffect, useState } from "react"
 import EditableInputField from "../formElements/editableInputField"
 import BaseDialog, { BaseDialogProps, useDialog } from "./baseDialog"
-import { MuiColorInput } from 'mui-color-input'
 import { DeleteTwoTone } from "@mui/icons-material"
 import EditableSelect from "../formElements/editableSelect"
 import { accountTypes } from '../../../lib/accountTypes'
 
 import type { Account, AccountType } from "../../../types"
+import toPrettyAccountType from "../../../lib/toPrettyAccountType"
+import EditableColorPicker from "../formElements/editableColorPicker"
 
 interface EditAccountDialogProps {
   dialogProps: BaseDialogProps,
@@ -43,20 +44,40 @@ export default function EditAccountDialog ({
           onSubmit={async () => {return true}}
           />
 
-          <EditableSelect value={account.type}>
-      {/* {console.log(accountTypes)} */}
-            {accountTypes.map(type => {
-              return <MenuItem 
-              value={type}
-              key={type}
-              >
-                {type}
-              </MenuItem>
-            })}
-          </EditableSelect>
-          
+        <EditableSelect 
+        label="Account Type"
+        value={account.type}
+        onSubmit={async (newValue: string, property: string | undefined) => {return true}}
+        >
+          {accountTypes.map(type => {
+            return <MenuItem 
+            value={type}
+            key={type}
+            >
+              {toPrettyAccountType(type)}
+            </MenuItem>
+          })}
+        </EditableSelect>
+        
+        <EditableInputField 
+        id='accountName'
+        label="Account Name"
+        value={title}
+        onSubmit={async () => {return true}}
+        />
 
-          <MuiColorInput value={account.color} format='hex' />
+        <EditableColorPicker 
+        value={account.color} 
+        format='hex' 
+        onSubmit={async (newValue: string, property: string | undefined) => {return true}}
+        />
+
+        {/* <MuiColorInput value={account.color} format='hex' /> */}
+        <EditableColorPicker 
+        value={account.color} 
+        format='hex' 
+        onSubmit={async (newValue: string, property: string | undefined) => {return true}}
+        />
 
           <Button color='error' variant='contained'>
             <DeleteTwoTone />

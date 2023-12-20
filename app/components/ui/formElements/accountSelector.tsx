@@ -1,13 +1,15 @@
 import useSWR from 'swr'
 import { ListItemIcon, MenuItem } from "@mui/material"
 import AccountIcon from "../accountIcon"
-import InputField from "./inputField"
+import InputField, { InputFieldProps } from "./inputField"
 
 import type { Account } from "../../../types"
 import BasicToast, { useToast } from '../toasts/basicToast'
 import { useEffect, useState } from 'react'
 
-export default function AccountSelector () {
+export type AccountSelectorProps = InputFieldProps
+
+export default function AccountSelector ({ value, onChange, disabled, required }: AccountSelectorProps) {
   const toast = useToast()
   
   //Get account data
@@ -27,10 +29,14 @@ export default function AccountSelector () {
     <>
       <InputField 
         name='account'
+        value={value}
         fullWidth 
         select 
         label='Account'
         errorState={error}
+        disabled={disabled}
+        onChange={onChange}
+        required={required}
         >
           {accounts?.map(account => {
             return <MenuItem 

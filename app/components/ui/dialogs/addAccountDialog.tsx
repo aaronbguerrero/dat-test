@@ -1,6 +1,6 @@
-import { Box, MenuItem, Select, SelectChangeEvent } from "@mui/material"
+import { Box, MenuItem, SelectChangeEvent } from "@mui/material"
 import { useTheme } from '@mui/material/styles'
-import { ChangeEvent, useState } from "react"
+import { ChangeEvent, ChangeEventHandler, useState } from "react"
 import InputField from "../formElements/inputField"
 import { MuiColorInput } from 'mui-color-input'
 import SubmittableDialog, { SubmittableDialogProps, useSubmittableDialog } from "./submittableDialog"
@@ -13,7 +13,7 @@ interface AddAccountDialogProps {
   title: string,
   handleTitleChange: (event: ChangeEvent<HTMLInputElement>) => void,
   type: AccountType,
-  handleTypeChange: (event: SelectChangeEvent) => void,
+  handleTypeChange: ChangeEventHandler<HTMLInputElement>,
   color: string,
   handleColorChange: (color: string) => void,
 }
@@ -35,16 +35,33 @@ export default function AddAccountDialog ({
     {...dialogProps}
     >
       <Box display='flex' flexDirection='column' gap={2}>
-        <InputField label="Account Name" value={title} onChange={handleTitleChange} />
+        <InputField 
+        label="Account Name" 
+        value={title} 
+        onChange={handleTitleChange}
+        required 
+        />
 
-        <Select value={type} onChange={handleTypeChange}>
+        <InputField 
+        select
+        label="Account Type"
+        value={type} 
+        onChange={handleTypeChange}
+        required
+        >
           <MenuItem value='checking'>Checking</MenuItem>
           <MenuItem value='creditCard'>Credit Card</MenuItem>
           <MenuItem value='savings'>Savings</MenuItem>
           <MenuItem value='loan'>Loan</MenuItem>
-        </Select>
+        </InputField>
 
-        <MuiColorInput value={color} onChange={handleColorChange} format='hex' />
+        <MuiColorInput 
+        label="Color"
+        required 
+        value={color} 
+        onChange={handleColorChange} 
+        format='hex' 
+        />
       </Box>
     </SubmittableDialog>
   )
@@ -59,7 +76,7 @@ export function useAddAccountDialog (onSubmit: (title: string, type: AccountType
   }
 
   const [type, setType] = useState<AccountType>('checking')
-  const handleTypeChange = (event: SelectChangeEvent) => {
+  const handleTypeChange: ChangeEventHandler<HTMLInputElement> = (event: SelectChangeEvent) => {
     setType(event.target.value as AccountType)
   }
 

@@ -20,6 +20,7 @@ import currencySchema from '../../../schemas/currencySchema'
 
 import type { Transaction } from '../../../types'
 import { Session } from 'next-auth'
+import EditableAccountSelector from '../formElements/editableAccountSelector'
 
 export type EditTransactionDialogProps = { 
   dialogProps: BaseDialogProps,
@@ -144,6 +145,11 @@ export default function EditTransactionDialog ({
           schema={amountSchema}
           disabled={isEditing}
           isEditingFlag={(isEditing) => setIsEditing(isEditing)}
+          />
+
+          <EditableAccountSelector 
+          value={transaction.account}
+          onSubmit={handleSubmit} 
           />
 
           {
