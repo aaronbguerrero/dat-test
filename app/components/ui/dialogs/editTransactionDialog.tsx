@@ -19,7 +19,6 @@ import EditableRecurrenceSelector from '../formElements/editableRecurrenceSelect
 import currencySchema from '../../../schemas/currencySchema'
 
 import type { Transaction } from '../../../types'
-import type { ScopedMutator } from 'swr/_internal'
 import { Session } from 'next-auth'
 
 export type EditTransactionDialogProps = { 
