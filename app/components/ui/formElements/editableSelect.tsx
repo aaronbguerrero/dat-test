@@ -1,49 +1,59 @@
-import { Box, Select } from "@mui/material"
-import { useState } from "react"
+import { Box } from "@mui/material"
 import EditButton from "../buttons/editButton"
+import React, { ChangeEvent, ChangeEventHandler } from "react"
+import useEditable from "../../../lib/useEditable"
+import InputField, { InputFieldProps } from "./inputField"
 
-type Props = {
-  children: React.ReactNode,
-  value: string,
+type Props = Omit<InputFieldProps, 'onSubmit'> & {
+
+  onSubmit: (newValue: string, property: string | undefined) => Promise<boolean>,
+  isEditingFlag?: (isEditing: boolean) => void,
 }
 
-export default function EditableSelect ({ children, value }: Props) {
-  const [isEditable, setIsEditable] = useState(false)
+export default function EditableSelect ({
+  children,
+  value, 
+  onSubmit, 
+  disabled, 
+  isEditingFlag,
+  required,
+}: Props) {
 
-  const handleEditButtonClick = (event: 'submit' | 'cancel' | 'edit') => {
-    switch (event) {
-      case 'submit':
-        console.log('submit')
-        break
-
-      case 'edit':
-        setIsEditable(true)
-        break
-        
-        case 'cancel':
-        setIsEditable(false)
-        //TODO: RESET TO ORIGINAL
-        break
-    }
+  const handleChange: ChangeEventHandler<HTMLInputElement> = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange(event.target.value)  
   }
+
+  const handleSubmit = (value: string) => {
+    return onSubmit(value, 'account')
+  }
+
+  const { 
+    value: internalValue, 
+    onChange, 
+    onEditButtonClick, 
+    isEditable 
+  } = useEditable(handleSubmit, value, isEditingFlag)
 
   return (
     <Box display='flex' alignItems='center' justifyContent='space-between' width='100%'>
-      <Select 
-      value={value}
-      fullWidth
+      <InputField
+      select
       disabled={!isEditable}
+      value={internalValue}
+      onChange={handleChange}
+      required={required}
       >
         {children}
-      </Select>
+      </InputField>
 
       <Box paddingX='1rem'>
         <EditButton 
-        onClick={handleEditButtonClick} 
+        onClick={onEditButtonClick} 
         isEditable={isEditable}  
-        disabled={false}
+        disabled={disabled}
         />
       </Box>
     </Box>
+    
   )
 }
