@@ -35,7 +35,7 @@ export default function Calendar ({ month, setMonth }: Props) {
 
   //Setup dialogs
   const addTransactionDialog = useAddTransactionDialog(mutate)
-  const editTransactionDialog = useEditTransactionDialog(mutate)
+  const editTransactionDialog = useEditTransactionDialog(mutate, transactions)
   
   //Change calendar month based on input state
   const calendarRef = useRef<FullCalendar>(null)

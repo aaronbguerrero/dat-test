@@ -31,7 +31,6 @@ export type EditTransactionDialogProps = {
   transaction?: Transaction, 
   open: (transaction: Transaction | undefined) => void,
   close: () => void,
-  //--------------
   isEditing: boolean,
   setIsEditing: (isEditing: boolean) => void,
   isRecurring: boolean,
@@ -208,7 +207,7 @@ export default function EditTransactionDialog ({
   )
 }
 
-export function useEditTransactionDialog(mutate: ScopedMutator) {
+export function useEditTransactionDialog(mutate: (key: string) => void, transactions: Transaction[] | undefined) { 
   const toast = useToast()
   const dialogHook = useDialog()
 
@@ -220,6 +219,11 @@ export function useEditTransactionDialog(mutate: ScopedMutator) {
 
   const [transaction, setTransaction] = useState<Transaction>()
 
+  //When parent transactions change, update dialog's transaction too
+  useEffect(() => {
+    setTransaction(transactions?.find(newTransaction => newTransaction._id === transaction?._id))
+  }, [transaction?._id, transactions])
+  
   //States and handlers
   const [isEditing, setIsEditing] = useState(false)
   
@@ -232,11 +236,11 @@ export function useEditTransactionDialog(mutate: ScopedMutator) {
     setIsAddingRecur(false)
   }
   
-  const handleOpen = (transaction: Transaction | undefined) => {
-    if (transaction?.recurrenceParentId || transaction?.isRecurring) setIsRecurring(true)
+  const handleOpen = (transactionToOpen: Transaction | undefined) => {
+    if (transactionToOpen?.recurrenceParentId || transactionToOpen?.isRecurring) setIsRecurring(true)
     else setIsRecurring(false)
 
-    setTransaction(transaction)
+    setTransaction(transactions?.find(transaction => transaction._id === transactionToOpen?._id))
 
     dialogHook.open()
   }
