@@ -77,7 +77,7 @@ export default function AccountsCard ({}) {
             key={account._id.toString()}
             onClick={() => handleEditAccountClick(account)}
             >
-              <ListItemIcon>
+              <ListItemIcon sx={{ color: account.color }}>
                 <AccountIcon type={account.type} />
               </ListItemIcon>
 
