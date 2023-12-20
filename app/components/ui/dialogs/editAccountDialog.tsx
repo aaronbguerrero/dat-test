@@ -59,16 +59,13 @@ export default function EditAccountDialog ({
           })}
         </EditableSelect>
         
-=======
-          <EditableInputField 
-          id='accountName'
-          label="Account Name"
-          value={title}
-          onSubmit={async () => {return true}}
-          />
->>>>>>> master
+        <EditableInputField 
+        id='accountName'
+        label="Account Name"
+        value={title}
+        onSubmit={async () => {return true}}
+        />
 
-        {/* <MuiColorInput value={account.color} format='hex' /> */}
         <EditableColorPicker 
         value={account.color} 
         format='hex' 
