@@ -99,7 +99,19 @@ export default function AddTransactionDialog ({
     if (transactionType === 'expense') amount = -Math.abs(removeCurrencyFormat(formData.amount.toString()))
     else amount = Math.abs(removeCurrencyFormat(formData.amount.toString()))
     
-    await fetch(`/api/transactions/addTransaction/${date}/${encodeURIComponent(formData.title.toString())}/${amount}/${formData.account.toString()}/${isRecurring ? recurrence : ''}`)
+    await fetch(`/api/transactions/addTransaction/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        date: date,
+        title: formData.title.toString(),
+        amount: amount,
+        account: formData.account.toString(),
+        ...isRecurring && {recurrence: recurrence},
+      }),
+    })
     .then(response => response.json())
     .then(async response => {
       if (response.acknowledged) {
