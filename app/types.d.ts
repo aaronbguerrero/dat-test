@@ -29,7 +29,7 @@ export interface Transaction {
   title: string,
   date: Date,
   account: Account._id,
-  allDay: boolean,
+  userId: ObjectId,
   amount: { amount: number, currency: Dinero.Currency },
   isRecurring?: boolean,
   recurrenceId?: ObjectId,
