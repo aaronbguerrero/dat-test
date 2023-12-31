@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { Button, DialogTitle, Divider, Stack, Tooltip } from '@mui/material'
+import { Box, Button, DialogTitle, Divider, Stack, Tooltip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { useSession } from 'next-auth/react'
 import Dinero from 'dinero.js'
 import removeCurrencyFormat from '../../../lib/removeCurrencyFormat'
 import BaseDialog, { BaseDialogProps, useDialog } from './baseDialog'
-import { DeleteTwoTone, EventRepeatTwoTone, LoopTwoTone } from '@mui/icons-material'
+import { DeleteTwoTone, EventRepeatTwoTone, LoopTwoTone, StarTwoTone } from '@mui/icons-material'
 import ExpenseIncomeButtons from '../buttons/expenseIncomeButtons'
 import toMonthString from '../../../lib/dates/toMonthString'
 import updateMonthEndingAmount from '../../../lib/updateMonthEndingAmount'
@@ -88,13 +88,24 @@ export default function EditTransactionDialog ({
 
           {(
             transaction.recurrenceId && 
-            
-            <Tooltip title="This transaction is part of a recurring series">
+            <Tooltip title={`This transaction is ${transaction.isParent ? "the parent" : "part"} of a recurring series`}>
+              <Box display='flex' alignItems='center'>
               <EventRepeatTwoTone 
               fontSize='small' 
               color='info' 
               sx={{ marginLeft: '1rem' }} 
               />
+
+                {
+                  transaction.isParent &&
+
+                  <StarTwoTone 
+                  fontSize='small' 
+                  color='info' 
+                  sx={{ marginLeft: '1rem' }} 
+                  />
+                }
+              </Box>
             </Tooltip>
           )}
         </Stack>
@@ -219,18 +230,16 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
     else toast.close()
   }, [session, toast])
 
-  const [transaction, setTransaction] = useState<Transaction>()
-
-  //When parent transactions change, update dialog's transaction too
-  useEffect(() => {
-    setTransaction(transactions?.find(newTransaction => newTransaction._id === transaction?._id))
-  }, [transaction?._id, transactions])
-  
   //States and handlers
+  const [transaction, setTransaction] = useState<Transaction>()
   const [isEditing, setIsEditing] = useState(false)
-  
   const [isRecurring, setIsRecurring] = useState<boolean>((transaction?.recurrenceParentId || transaction?.isRecurring) ? true : false)
   const [isAddingRecur, setIsAddingRecur] = useState<boolean>(false)
+
+  useEffect(() => {
+    if (transaction?.recurrenceParentId || transaction?.isRecurring || transaction?.recurrenceId) setIsRecurring(true)
+    else setIsRecurring(false)
+  }, [transaction])
 
   const handleClose = () => {
     dialogHook.close()

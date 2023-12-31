@@ -6,6 +6,7 @@ import toBasicDateString from "./dates/toBasicDateString"
 
 import type { Transaction } from '../types'
 import type { Session } from "next-auth"
+import { isSameDay } from "./dates/isSameDay"
 
 export default async function getTransactions ( db: Db, session: Session | null, date: Date) {
   const month = date.getUTCMonth() + 1
@@ -52,8 +53,10 @@ export default async function getTransactions ( db: Db, session: Session | null,
     //Create and add recurring transactions to array
     ruleSet.between(date, getLastDayOfMonth(date), true).map(recurDate => {
       //Build and add a transaction for each recurrence
+      const isParent = isSameDay(recurDate, transaction.date)
+
       const newTransaction: Transaction = {
-        _id: new ObjectId(),
+        _id: (isParent) ? transaction._id : new ObjectId(),
         title: transaction.title,
         date: recurDate,
         allDay: true,
@@ -63,6 +66,7 @@ export default async function getTransactions ( db: Db, session: Session | null,
         recurrenceId: transaction.recurrenceId,
         recurrenceParentId: transaction._id,
         recurrenceFreq: transaction.recurrenceFreq,
+        isParent: isParent,
       }
 
       transactions.push(newTransaction)

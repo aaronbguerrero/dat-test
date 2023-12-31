@@ -36,4 +36,5 @@ export interface Transaction {
   recurrenceFreq?: string,
   recurrenceExclusions?: Date[],
   recurrenceParentId?: ObjectId,
+  isParent?: boolean,
 }

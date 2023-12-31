@@ -2,12 +2,14 @@ import {
   Box,
   FormControlLabel, 
   Radio, 
-  RadioGroup 
+  RadioGroup, 
+  Typography
 } from "@mui/material"
 import { ChangeEvent, useState } from "react"
 import SubmittableDialog, { SubmittableDialogProps, useSubmittableDialog } from "./submittableDialog"
 
 import type { Transaction } from "../../../types"
+import { WarningTwoTone } from "@mui/icons-material"
 
 export interface RecurEditDialogProps { 
   dialogProps: SubmittableDialogProps,
@@ -15,6 +17,7 @@ export interface RecurEditDialogProps {
   setEditType: (editType: 'single' | 'future' | 'all') => void,
   open: (transaction?: Transaction, newValue?: string, property?: string, date?: string) => void,
   property: string,
+  isParent?: boolean,
 }
 
 export default function RecurEditDialog ({ 
@@ -22,6 +25,7 @@ export default function RecurEditDialog ({
   editType,
   setEditType,
   property,
+  isParent,
 }: RecurEditDialogProps) {
 
   const handleEditTypeChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -32,6 +36,21 @@ export default function RecurEditDialog ({
     <SubmittableDialog
     {...dialogProps}
     >
+      {
+        isParent &&
+
+        <Box display='flex' flexDirection='column' alignItems='center' textAlign='center' gap={4}>
+          <WarningTwoTone color='warning' style={{ fontSize: '5rem'}} />
+
+          <Typography variant='h5'>
+            Since this is the parent of a recurring series, this edit will apply to all of the following transactions in the series.
+          </Typography>
+        </Box>
+      }
+
+      {
+        !isParent && 
+
       <Box 
       component='form' 
       display='flex' 
@@ -62,6 +81,7 @@ export default function RecurEditDialog ({
           }
         </RadioGroup>
       </Box>         
+      }         
     </SubmittableDialog>
   )
 }
@@ -89,6 +109,7 @@ export function useRecurEditDialog (
     date?: string,
   ) => {
     if (transaction) setTransaction(transaction)
+    if (transaction?.isParent) setEditType('all')
     setValue(newValue || '')
     setProperty(property || 'date')
     setDate(date || '')
@@ -118,6 +139,7 @@ export function useRecurEditDialog (
     setEditType: setEditType,
     open: handleOpen,
     property: property,
+    isParent: transaction?.isParent,
   } 
 
   return dialogProps
