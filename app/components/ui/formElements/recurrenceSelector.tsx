@@ -14,7 +14,7 @@ import { ChangeEvent, useEffect, useState } from "react"
 import { Frequency, RRule, Weekday } from 'rrule'
 import toBasicDateString from "../../../lib/dates/toBasicDateString"
 
-type Props = { 
+export type RecurrenceSelectorProps = { 
   value: string,
   onChange: (rule: string) => void,
   date: Date,
@@ -31,7 +31,15 @@ type Props = {
   //4a. construct new rule
   //4b. pass new rule to parent
 
-export default function RecurrenceSelector ({ value, onChange, date, disabled, editButton, label, id }: Props) {
+export default function RecurrenceSelector ({ 
+  value, 
+  onChange, 
+  date, 
+  disabled, 
+  editButton, 
+  label, 
+  id 
+}: RecurrenceSelectorProps) {
   const [internalRule, setInternalRule] = useState<RRule>(RRule.fromString(value))
 
   const [freq, setFreq] = useState<Frequency>(RRule.MONTHLY)

@@ -25,6 +25,7 @@ export default function useEditable (
   const [isLoading, setIsLoading] = useState(false)
 
   const onChange = async (newValue: string) => {
+    //TODO: Implement
     // //If changeCallback, do it, then set value
     // if (changeCallback) {
     //   const response = await changeCallback(newValue || '') 
@@ -67,6 +68,14 @@ export default function useEditable (
     }
   }
 
+  const handleSetIsEditable = (value: boolean) => {
+    setIsEditable(value)
+  }
+
+  const handleSetIsLoading = (value: boolean) => {
+    setIsLoading(value)
+  }
+
   useEffect(() => {
     if (value && !isEditable) {
       setInternalValue(value)
@@ -78,7 +87,9 @@ export default function useEditable (
     onChange: onChange,
     onEditButtonClick: handleButtonClick,
     isEditable: isEditable,
+    setIsEditable: handleSetIsEditable,
     isLoading: isLoading,
+    setIsLoading: handleSetIsLoading,
   }
 
   return editableProps

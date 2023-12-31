@@ -32,7 +32,8 @@ export default function EditableSelect ({
     value: internalValue, 
     onChange, 
     onEditButtonClick, 
-    isEditable 
+    isEditable,
+    isLoading,
   } = useEditable(handleSubmit, value, isEditingFlag)
 
   return (
@@ -53,6 +54,7 @@ export default function EditableSelect ({
         onClick={onEditButtonClick} 
         isEditable={isEditable}  
         disabled={disabled}
+        isLoading={isLoading}
         />
       </Box>
     </Box>

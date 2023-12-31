@@ -168,11 +168,9 @@ export default function EditTransactionDialog ({
 
           {
             (isRecurring || isAddingRecur) && 
-            
             <EditableRecurrenceSelector 
             value={transaction.recurrenceFreq || ''} 
             id='recurrenceFreq'
-            transaction={transaction}
             onSubmit={isAddingRecur ? handleAddRecurrence : handleSubmit}
             onRemove={handleRemoveRecurrence}
             date={transaction.date}
