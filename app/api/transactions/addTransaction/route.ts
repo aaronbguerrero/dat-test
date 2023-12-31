@@ -5,16 +5,15 @@ import clientPromise from '../../../lib/database'
 import { ObjectId } from "mongodb"
 
 //Add Transaction to DB
-//Body: {
-//   date,
-//   title,
-//   amount,
-//   account,
-//   recurrence(optional)
-// }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json()
+  const body: {
+    date: Date,
+    title: string,
+    amount: number,
+    account: ObjectId,
+    recurrence?: string,
+  } = await request.json()
   const session = await getServerSession(AuthOptions)
 
   const client = await clientPromise
@@ -24,7 +23,7 @@ export async function POST(request: NextRequest) {
     { 
       title: body.title, 
       amount: {
-        amount: parseInt(body.amount),
+        amount: body.amount,
         currency: session?.user?.currencyUsed
       }, 
       date: new Date(body.date),

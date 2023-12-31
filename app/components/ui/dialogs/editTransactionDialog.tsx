@@ -21,6 +21,7 @@ import currencySchema from '../../../schemas/currencySchema'
 import type { Transaction } from '../../../types'
 import { Session } from 'next-auth'
 import EditableAccountSelector from '../formElements/editableAccountSelector'
+import { ModifyResult } from 'mongodb'
 
 export type EditTransactionDialogProps = { 
   dialogProps: BaseDialogProps,
@@ -277,13 +278,17 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
     const response = await fetch(`/api/transactions/addRecurrenceToTransaction/${transaction._id}/${newValue}`)
       .then(response => response.json())
       .then(response => {
-        if (response === true) {
+        if (response.ok === 1) {
+          console.log("Res", response.value)
+          setTransaction(response.value)
+          
+          setIsAddingRecur(false)
+          setIsEditing(false)
+          setIsRecurring(true)
+
           mutate(`/api/transactions/getTransactions/${toMonthString(new Date(transaction.date))}`)
           
           toast.open("Recurrence added successfully!", 'success')
-
-          setIsAddingRecur(false)
-          setIsEditing(false)
 
           return true
         } 
@@ -301,13 +306,19 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
   }
 
   const handleRemoveRecurrence = async () => {
-    if (!transaction) return false
+    if (!transaction || transaction === undefined) return false
 
-    const response = await fetch(`/api/transactions/removeRecurrenceFromTransaction/${transaction.recurrenceParentId}`)
+    const response = await fetch(`/api/transactions/removeRecurrenceFromTransaction/${transaction.recurrenceParentId || transaction._id}`)
       .then(response => response.json())
       .then(response => {
-        if (response === true) {
-          handleClose()
+        if (response.ok === 1) {
+          if (transaction._id !== response.value._id) handleClose()
+
+          setTransaction(response.value)
+
+          setIsAddingRecur(false)
+          setIsEditing(false)
+          setIsRecurring(false)
 
           mutate(`/api/transactions/getTransactions/${toMonthString(new Date(transaction.date))}`)
           
@@ -332,7 +343,8 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
     value: string, property: 
     string
   ) => {
-    if (!transaction) return false
+    //TODO: Handle this error better (toast?)
+    if (!transaction) return {} as ModifyResult<Transaction>
 
     //Update transaction and display/return result
     let id = transaction._id
@@ -343,8 +355,10 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
     const response = await fetch(`/api/transactions/updateTransaction/${id}/${property}/${encodeURIComponent(value)}/${session?.user?.currencyUsed}`)
     .then(response => response.json())
     .then(response => {
-      if (response === true) {
+      if (response.ok === 1) {
         const monthString = toMonthString(new Date(transaction.date))
+
+        setTransaction(response.value)
 
         mutate(`/api/transactions/getTransactions/${toMonthString(new Date(transaction.date))}`)
 
@@ -355,16 +369,13 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
         })
         
         toast.open("Transaction updated successfully!", 'success')
-
-        return true
       } 
-      else {
-        toast.open('Sorry! There was a problem updating the transaction. Please try again.', 'error')
-        return false
-      }
-    })
+      else toast.open('Sorry! There was a problem updating the transaction. Please try again.', 'error')
 
     return response
+    })
+
+    return response as Promise<ModifyResult<Transaction>>
   }
   
   const handleUpdateRecurringTransaction = async (
@@ -373,14 +384,30 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
     property?: string
   ) => {
     //Check to make sure payload is there
-    if (!newValue || !property || !transaction) return false
+    if (!newValue || !property || !transaction) return {} as ModifyResult<Transaction>
 
     const monthString = toMonthString(new Date(transaction.date))
 
-    const response = await fetch(`/api/transactions/updateRecurringTransaction/${editType}/${transaction.recurrenceParentId}/${transaction.date}/${property}/${encodeURIComponent(newValue)}/${session?.user?.currencyUsed}`)
+    const response = await fetch(`/api/transactions/updateRecurringTransaction/`, { 
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        _id: transaction._id,
+        editType: editType,
+        recurrenceParentId: transaction.recurrenceParentId,
+        date: transaction.date,
+        property: property,
+        value: newValue,
+        currency: session?.user?.currencyUsed,
+      })
+    })
     .then(response => response.json())
     .then(response => {
-      if (response === true) {
+      if (response) {
+        setTransaction(response)
+
         mutate(`/api/transactions/getTransactions/${monthString}`)
 
         updateMonthEndingAmount(monthString)
@@ -390,17 +417,14 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
         })
 
         toast.open("Transaction(s) updated successfully!", 'success')
-
-        return true
       }
 
-      else {
-        toast.open('Sorry! There was a problem updating the transaction(s). Please try again.', 'error')
-        return false
-      }
+      else toast.open('Sorry! There was a problem updating the transaction(s). Please try again.', 'error')
+
+      return response
     })
 
-    return response
+    return response as Promise<ModifyResult<Transaction>>
   }
 
   const handleSubmit = async (
@@ -425,7 +449,10 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
     
     //If not, just edit transaction
     else {
-      return handleUpdateTransaction(value, property)
+      const response = await handleUpdateTransaction(value, property)
+
+      if (response.ok === 1) return true
+      else return false
     }
 
   }

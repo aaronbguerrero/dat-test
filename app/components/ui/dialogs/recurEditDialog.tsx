@@ -9,6 +9,7 @@ import { ChangeEvent, useState } from "react"
 import SubmittableDialog, { SubmittableDialogProps, useSubmittableDialog } from "./submittableDialog"
 
 import type { Transaction } from "../../../types"
+import { ModifyResult } from "mongodb"
 import { WarningTwoTone } from "@mui/icons-material"
 
 export interface RecurEditDialogProps { 
@@ -93,7 +94,7 @@ export function useRecurEditDialog (
     property?: string,
     transaction?: Transaction,
     date?: string,
-  ) => Promise<boolean>, 
+  ) => Promise<ModifyResult<Transaction>>, 
   onCancel?: () => void,
 ) {
   const [transaction, setTransaction] = useState<Transaction>()
@@ -120,8 +121,13 @@ export function useRecurEditDialog (
   const handleSubmit = async () => {
     const response = onSubmit(editType, value, property, transaction, date)
     .then(response => {
-      if (response === true) setEditType('single')
-      return response
+      if (response) {
+        setEditType('single')
+
+        return true
+      }
+
+      else return false
     })
     return response
   }
