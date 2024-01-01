@@ -15,6 +15,7 @@ declare module 'next-auth' {
 }
 
 export type AccountType = typeof accountTypes[number]
+export type RecurrenceEditType = 'single' | 'future' | 'all'
 
 export interface Account {
   readonly _id: ObjectId,
