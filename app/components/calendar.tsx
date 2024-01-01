@@ -15,7 +15,8 @@ import toBasicDateString from "../lib/dates/toBasicDateString"
 import AddTransactionDialog, { useAddTransactionDialog } from "./ui/dialogs/addTransactionDialog"
 import EditTransactionDialog, { useEditTransactionDialog } from "./ui/dialogs/editTransactionDialog"
 
-import type { Transaction } from '../types'
+import type { RecurrenceEditType, Transaction } from '../types'
+import { ModifyResult } from "mongodb"
 
 type Props = { 
   month: string, 
@@ -90,7 +91,7 @@ export default function Calendar ({ month, setMonth }: Props) {
     await fetch(`/api/transactions/updateTransaction/${id}/date/${newDate}/`)
     .then(response => response.json())
     .then(response => {
-      if (response === true) {
+      if (response.ok === 1) {
         mutate(`/api/transactions/getTransactions/${month}`)
         //TODO: Update month ending amount (should rethink this piece)
         
@@ -108,21 +109,32 @@ export default function Calendar ({ month, setMonth }: Props) {
   }
 
   const updateRecurringEventDate = async (
-    editType: 'single' | 'future' | 'all', 
+    editType: RecurrenceEditType, 
     newDate?: string, 
     property?: string, 
     transaction?: Transaction, 
     originalDate?: string,
   ) => {
-    const response = await fetch(`/api/transactions/updateRecurringTransaction/${editType}/${transaction}/${originalDate}/${property}/${newDate}`)
+    const response: Promise<ModifyResult<Transaction>> = await fetch(`/api/transactions/updateRecurringTransaction/`, { 
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        editType: editType,
+        transaction: transaction,
+        originalDate: originalDate,
+        property: property,
+        newDate: newDate,
+      })
+    })
     .then(response => response.json())
     .then(response => {
-      if (response === true) {
+      if (response) {
+        //TODO: Need to implement error on response
         mutate(`/api/transactions/getTransactions/${month}`)
         
         toast.open("Transaction(s) updated successfully!", 'success')
-
-        return true
       }
 
       else {
@@ -132,9 +144,9 @@ export default function Calendar ({ month, setMonth }: Props) {
         mutate(`/api/transactions/getTransactions/${month}`)
         
         toast.open('Sorry! There was a problem updating the transaction(s). Please try again.', 'error')
-        
-        return false
       }
+
+      return response
     })
 
     return response

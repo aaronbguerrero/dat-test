@@ -1,37 +1,19 @@
 import { Box } from "@mui/material"
-import { useEffect, useState } from "react"
-import RecurrenceSelector from "./recurrenceSelector"
+import { useEffect } from "react"
+import RecurrenceSelector, { RecurrenceSelectorProps } from "./recurrenceSelector"
 import EditButton from "../buttons/editButton"
 import RemoveButton from "../buttons/removeButton"
 import ConfirmationDialog, { useConfirmationDialog } from "../dialogs/confirmationDialog"
-import { Transaction } from "../../../types"
+import useEditable from "../../../lib/useEditable"
 
-interface PropsWithoutInitialValue { 
-  transaction: Transaction,
-  onSubmit: (newValue: string, label: string) => Promise<boolean>,
+type Props = Omit<RecurrenceSelectorProps, 'onChange'> & {
+  onSubmit: (newValue: string, newProperty: string) => Promise<boolean>,
   onRemove?: () => Promise<boolean>,
-  label?: string,
   isEditingFlag?: (isEditing: boolean) => void,
-  disabled?: boolean,
   editOnOpen?: boolean,
-  id: string,
 }
 
-type PropsWithInitialValue = 
-  | {
-      value: string,
-      date: Date,
-    } 
-  | {
-      value?: never,
-      date?: never,
-    }
-
-type Props = PropsWithoutInitialValue & PropsWithInitialValue
-
-
 export default function EditableRecurrenceSelector ({ 
-  transaction,
   value, 
   onSubmit, 
   onRemove, 
@@ -42,11 +24,19 @@ export default function EditableRecurrenceSelector ({
   editOnOpen, 
   id,
 }: Props) {
-  const [originalValue, setOriginalValue] = useState(value || '')
-  const [internalValue, setInternalValue] = useState(value || '')
-  
-  const [isEditable, setIsEditable] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const handleSubmit = async (newValue: string) => {
+    return await onSubmit(newValue, id)
+  }
+
+  const { 
+    value: internalValue, 
+    onChange, 
+    onEditButtonClick, 
+    isEditable,
+    setIsEditable,
+    isLoading,
+    setIsLoading,
+  } = useEditable(handleSubmit, value, isEditingFlag)
 
   //Allow to be editable on open
   //TODO: find a better way to do this
@@ -57,40 +47,6 @@ export default function EditableRecurrenceSelector ({
   const onClickAway = () => {
     if(isEditable) {
       setIsEditable(false)
-    }
-  }
-
-  const handleEditButtonClick = async (event: 'cancel' | 'submit' | 'edit') => {
-    switch (event) {
-      case 'edit':
-        setOriginalValue(internalValue)
-        if (isEditingFlag) isEditingFlag(true)
-        setIsEditable(true)
-        break
-        
-      case 'cancel':
-        setIsEditable(false)
-        if (isEditingFlag) isEditingFlag(false)
-        setInternalValue(originalValue)
-        break
-
-      case 'submit':
-        setIsLoading(true)
-        setIsEditable(false)
-
-        await onSubmit(internalValue, id)
-        .then(response => {
-          setIsLoading(false)
-
-          if (isEditingFlag) {
-            if (response === true) isEditingFlag(false)
-            
-            else {
-              setIsEditable(true)
-            }
-          }
-        })
-        break
     }
   }
 
@@ -118,10 +74,6 @@ export default function EditableRecurrenceSelector ({
     else return (false)
   }
 
-  const onChange = (rule: string) => {
-    setInternalValue(rule)
-  }
-
   const confirmationDialog = useConfirmationDialog(handleRemoveRecurrence)
 
   return (
@@ -133,9 +85,9 @@ export default function EditableRecurrenceSelector ({
         date={date || new Date} 
         disabled={!isEditable}
         editButton={
-          <Box display='flex' justifyContent={(onRemove && originalValue !== '') ? 'space-between' : 'end'} width='100%'>
+          <Box display='flex' justifyContent={onRemove ? 'space-between' : 'end'} width='100%'>
             {
-              (onRemove && originalValue !== '') && 
+              onRemove && 
               <RemoveButton 
               onClick={handleRemoveRecurrenceClick}
               tooltipText="Remove recurrence from transaction" 
@@ -144,7 +96,7 @@ export default function EditableRecurrenceSelector ({
             }
 
             <EditButton 
-            onClick={handleEditButtonClick} 
+            onClick={onEditButtonClick} 
             isEditable={isEditable} 
             isLoading={isLoading} 
             disabled={disabled} 

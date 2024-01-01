@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
   const client = await clientPromise
   const db = client.db("userData")
 
-  const response = await db.collection("transactions").updateOne(
+  const response = await db.collection("transactions").findOneAndUpdate(
     { _id: id },
     { $set: { isRecurring: false },
       $unset: {
@@ -18,19 +18,21 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
         recurrenceFreq: "",
         recurrenceExclusions: ""
       }
-    }
+    },
+    { returnDocument: 'after' },
   )
   .then(async response => {
-    if (response.acknowledged) {
+    console.log('id', id)
+    console.log('res', response)
+    if (response.ok === 1) {
       const deleteResponse = await db.collection("transactions").deleteMany(
         { recurrenceParentId: id }
       )
 
-      return deleteResponse
+      if (!deleteResponse.acknowledged) return NextResponse.error()
+      else return response
     }
   })
 
-
-  if (response?.acknowledged === true) return NextResponse.json(true)
-  else return NextResponse.json(false)
+  return NextResponse.json(response)
 }

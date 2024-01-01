@@ -11,16 +11,16 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
   const client = await clientPromise
   const db = client.db("userData")
 
-  const response = await db.collection("transactions").updateOne(
+  const response = await db.collection("transactions").findOneAndUpdate(
     { _id: id },
     { $set: {
       isRecurring: true,
       recurrenceId: new ObjectId,
       recurrenceFreq: rule,
       recurrenceExclusions: [],
-    }}
-    )
+    }},
+    { returnDocument: 'after' },
+  )
 
-  if (response.modifiedCount === 1) return NextResponse.json(true)
-  else return NextResponse.json(false)
+  return NextResponse.json(response)
 }
