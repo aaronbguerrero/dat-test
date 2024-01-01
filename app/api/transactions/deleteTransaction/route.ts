@@ -4,7 +4,7 @@ import clientPromise from "../../../lib/database"
 import { ObjectId } from "mongodb"
 
 //Delete Transaction
-export async function DELETE(request: NextRequest, { params }: { params: { slug: string }}) {
+export async function DELETE(request: NextRequest) {
   const body: {
     _id: ObjectId,
   } = await request.json()

@@ -3,7 +3,7 @@ import { ObjectId } from "mongodb"
 import clientPromise from "../../../lib/database"
 
 //Add recurrence to transaction 
-export async function PATCH(request: NextRequest, { params }: { params: { slug: string }}) {
+export async function PATCH(request: NextRequest) {
   const body: {
     _id: ObjectId,
     rule: string,

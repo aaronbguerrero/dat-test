@@ -6,7 +6,7 @@ import { RRule } from "rrule"
 import type { RecurrenceEditType, Transaction } from '../../../types'
 
 //Delete Recurring Transaction
-export async function DELETE(request: NextRequest, { params }: { params: { slug: string }}) {
+export async function DELETE(request: NextRequest) {
   const body: {
     editType: RecurrenceEditType,
     parentId: ObjectId,
