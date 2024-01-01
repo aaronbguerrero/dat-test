@@ -201,6 +201,7 @@ export default function Calendar ({ month, setMonth }: Props) {
 
         event.id = transaction._id.toString()
 
+        //TODO: change event color to account color?
         if (transaction.amount.amount > 0) event.color = theme.palette.primary.main
         else event.color = theme.palette.tertiary.main
 

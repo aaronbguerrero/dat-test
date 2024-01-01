@@ -8,14 +8,14 @@ import EditAccountDialog, { useEditAccountDialog } from "../ui/dialogs/editAccou
 import AccountIcon from "../ui/accountIcon"
 
 import type { Account, AccountType } from "../../types"
-import { ModifyResult } from "mongodb"
+import type { ModifyResult } from "mongodb"
 
 export default function AccountsCard ({}) {
   const toast = useToast()
   
   const {data: accounts, error: accountsError, mutate } = useSWR<Account[]>(`/api/accounts/getAccounts`)
   useEffect(() => {
-  if (accountsError) toast.open("Sorry! There was a problem loading the month data. Please refresh the page.", 'error')
+    if (accountsError) toast.open("Sorry! There was a problem loading the month data. Please refresh the page.", 'error')
     else toast.close()
   }, [accountsError, toast])
   
@@ -53,7 +53,7 @@ export default function AccountsCard ({}) {
   const handleEditAccountClick = (account: Account) => {
     editAccountDialog.open(account)
   }
-  
+
   const handleEditAccount = async (account: Account, newValue: string, property: string | undefined) => {
     return await fetch(`/api/accounts/updateAccount/${account._id}/${property}/${encodeURIComponent(newValue)}`)
     .then(response => response.json())
