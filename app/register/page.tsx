@@ -32,16 +32,36 @@ export default function Register () {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
 
-    await fetch(`/api/user/updateUser/${session?.user?.id}/name/${encodeURIComponent(name)}`)
+    await fetch(`/api/user/updateUser/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        _id: session?.user?.id,
+        property: 'name',
+        value: name,
+      })
+    })
     .then(response => response.json())
     .then(async response => {
-      if (response === true) await update({ name: name })
+      if (response.acknowledged) await update({ name: name })
     })
     .then(async () => {
-      await fetch(`/api/user/updateUser/${session?.user?.id}/currencyUsed/${currency}`)
+      await fetch(`/api/user/updateUser/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          _id: session?.user?.id,
+          property: 'currencyUsed',
+          value: currency,
+        })
+      })
       .then(response => response.json())
       .then(async response => {
-        if (response === true ) {
+        if (response.acknowledged) {
           await update({ currencyUsed: currency })
           toast.open("User registered!", 'success')
 
