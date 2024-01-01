@@ -5,7 +5,6 @@ import clientPromise from '../../../lib/database'
 import { ObjectId } from "mongodb"
 
 //Add Transaction to DB
-
 export async function POST(request: NextRequest) {
   const body: {
     date: Date,

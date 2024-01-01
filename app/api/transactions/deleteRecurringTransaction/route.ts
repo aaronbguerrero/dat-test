@@ -1,32 +1,36 @@
 import { NextResponse, NextRequest } from "next/server"
-import clientPromise from "../../../../lib/database"
+import clientPromise from "../../../lib/database"
 import { ObjectId } from "mongodb"
 import { RRule } from "rrule"
 
-import type { Transaction } from '../../../../types'
+import type { RecurrenceEditType, Transaction } from '../../../types'
 
 //Delete Recurring Transaction
-//Slug parameters: editType/recurrenceParentId/date to change
-export async function GET(request: NextRequest, { params }: { params: { slug: string }}) {
-  const editType = params.slug[0]
-  const parentId = new ObjectId(params.slug[1])
-  const date = new Date(params.slug[2])
+export async function DELETE(request: NextRequest) {
+  const body: {
+    editType: RecurrenceEditType,
+    parentId: ObjectId,
+    date: Date,
+  } = await request.json()
+
+  const parentId = new ObjectId(body.parentId)
+  const date =  new Date(body.date)
   
   const client = await clientPromise
   const db = client.db("userData")
 
-  if (editType === 'single') {
+  if (body.editType === 'single') {
     //Create exclusion in parent transaction
     const response = await db.collection("transactions").updateOne(
       { _id: parentId },
       { $push: { recurrenceExclusions: date }}
     )
     
-    if (response.modifiedCount === 1) return NextResponse.json(true)
-    else return NextResponse.json(false)
+    if (response.modifiedCount === 1) return NextResponse.json(response)
+    else return NextResponse.json({ status: 500 })
   }
   
-  else if (editType === 'future') {
+  else if (body.editType === 'future') {
     //Update end date in parent transaction
     //Get recurrence rules from parent
     const parent = await db.collection("transactions").findOne({ _id: parentId })
@@ -39,7 +43,7 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
       const originalRule = new RRule(originalRuleOptions)
       
       //Add count for new rule and remove end date
-      const endDate = new Date(date)
+      const endDate = date
       endDate.setDate(endDate.getDate() - 1)
       
       ruleOptions.count = originalRule.between(parent?.date, endDate, true).length
@@ -47,7 +51,7 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
       
     } else {
       //Add new end date and remove any count
-      const endDate = new Date(date)
+      const endDate = date
       endDate.setDate(endDate.getDate() - 1)
       
       ruleOptions.until = new Date(endDate)
@@ -60,11 +64,11 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
       { $set: { recurrenceFreq: new RRule(ruleOptions).toString() }}
       )
       
-      if (response.modifiedCount === 1) return NextResponse.json(true)
-      else return NextResponse.json(false)
+      if (response.modifiedCount === 1) return NextResponse.json(response)
+      else return NextResponse.json({ status: 500 })
   }
   
-  else if (editType === 'all') {
+  else if (body.editType === 'all') {
     // const response = await db.collection("transactions").findOneAndDelete({ "_id": parentId })
     // .then(response => {
     // })
@@ -74,9 +78,9 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
     const response = await db.collection("transactions")
     .deleteMany({ recurrenceId: parent?.recurrenceId })
 
-    if (response.acknowledged) return NextResponse.json(true)
-    else return NextResponse.json(false)
+    if (response.acknowledged) return NextResponse.json(response)
+    else return NextResponse.json({ status: 500 })
   } 
   
-  return NextResponse.json(false)
+  return NextResponse.json({ status: 500 })
 }

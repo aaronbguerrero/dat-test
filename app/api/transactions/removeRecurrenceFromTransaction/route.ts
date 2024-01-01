@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
-import clientPromise from "../../../../lib/database"
+import clientPromise from "../../../lib/database"
 
 //Remove recurrence from transaction 
-//Slug parameters: id
-export async function GET(request: NextRequest, { params }: { params: { slug: string }}) {
-  const id = new ObjectId(params.slug)
+
+export async function PATCH(request: NextRequest) {
+  const body: {
+    _id: ObjectId,
+  } = await request.json()
+
+  const id = new ObjectId(body._id)
 
   const client = await clientPromise
   const db = client.db("userData")
@@ -29,7 +33,7 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
         { recurrenceParentId: id }
       )
 
-      if (!deleteResponse.acknowledged) return NextResponse.error()
+      if (!deleteResponse.acknowledged) return NextResponse.json({ status: 500 })
       else return response
     }
   })

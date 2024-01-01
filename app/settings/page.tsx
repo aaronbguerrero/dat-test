@@ -15,6 +15,7 @@ import { z } from "zod"
 import { SWRConfig } from "swr"
 import setupSwrFetcher from "../lib/setupSwrFetcher"
 import AccountsCard from "../components/settings/accountsCard"
+import { UpdateResult } from "mongodb"
 
 export default function Settings () {
   const toast = useToast()
@@ -34,10 +35,21 @@ export default function Settings () {
   const handleSubmit = async (value: string, property: string | undefined) => {
     if (property === undefined) return false
 
-    const response = await fetch(`/api/user/updateUser/${session?.user?.id}/${property}/${encodeURIComponent(value)}`)
+    const response = await fetch(`/api/user/updateUser/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        _id: session?.user?.id,
+        property: property,
+        value: value,
+      })
+    })
     .then(response => response.json()
     .then(async response => {
-      if (response === true) {
+      console.log(response)
+      if (response.acknowledged) {
         await update({ [property || '']: value })
 
         toast.open("User account updated successfully!", 'success')
@@ -59,7 +71,15 @@ export default function Settings () {
   }
 
   const handleDeleteUser = async () => {
-    const response = await fetch(`/api/user/deleteUser/${session?.user?.id || ''}`)
+    const response = await fetch(`/api/user/deleteUser/`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        _id: session?.user?.id,
+      })
+    })
     .then(response => response.json())
     .then(response => {
       if (response === true) {

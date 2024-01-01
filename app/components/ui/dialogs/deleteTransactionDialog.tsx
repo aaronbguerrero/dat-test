@@ -8,6 +8,7 @@ import { ChangeEvent, useState } from "react"
 import SubmittableDialog, { SubmittableDialogProps, useSubmittableDialog } from "./submittableDialog"
 
 import type { Transaction } from "../../../types"
+import { DeleteResult, UpdateResult } from "mongodb"
 
 export interface DeleteTransactionDialogProps { 
   isRecurring?: boolean,
@@ -62,15 +63,20 @@ export default function DeleteTransactionDialog ({
   )
 }
 
-export function useDeleteTransactionDialog (onDelete: (editType: 'single' | 'future' | 'all') => Promise<boolean>) {
+export function useDeleteTransactionDialog (onDelete: (editType: 'single' | 'future' | 'all') => Promise<UpdateResult | DeleteResult | false>) {
   const [transaction, setTransaction] = useState<Transaction>()
   const [editType, setEditType] = useState<'single' | 'future' | 'all'>('single')
   
   const handleDelete = async () => {
     const response = onDelete(editType)
     .then(response => {
-      if (response === true) setEditType('single')
-      return response
+      if (response === false) return false
+      
+      if (response.acknowledged) {
+        setEditType('single')
+        return true
+      }
+      else return false
     })
     return response
   }
