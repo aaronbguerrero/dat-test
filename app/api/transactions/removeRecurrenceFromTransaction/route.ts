@@ -16,27 +16,12 @@ export async function PATCH(request: NextRequest) {
 
   const response = await db.collection("transactions").findOneAndUpdate(
     { _id: id },
-    { $set: { isRecurring: false },
-      $unset: {
-        recurrenceId: null,
-        recurrenceFreq: "",
-        recurrenceExclusions: ""
-      }
-    },
+    {$unset: {
+      recurrenceFreq: "",
+      recurrenceExclusions: ""
+    }},
     { returnDocument: 'after' },
   )
-  .then(async response => {
-    console.log('id', id)
-    console.log('res', response)
-    if (response.ok === 1) {
-      const deleteResponse = await db.collection("transactions").deleteMany(
-        { recurrenceParentId: id }
-      )
-
-      if (!deleteResponse.acknowledged) return NextResponse.json({ status: 500 })
-      else return response
-    }
-  })
-
+ 
   return NextResponse.json(response)
 }

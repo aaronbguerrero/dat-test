@@ -8,7 +8,7 @@ import {
 import { ChangeEvent, useState } from "react"
 import SubmittableDialog, { SubmittableDialogProps, useSubmittableDialog } from "./submittableDialog"
 
-import type { Transaction } from "../../../types"
+import type { RecurrenceEditType, Transaction } from "../../../types"
 import { ModifyResult } from "mongodb"
 import { WarningTwoTone } from "@mui/icons-material"
 
@@ -18,7 +18,7 @@ export interface RecurEditDialogProps {
   setEditType: (editType: 'single' | 'future' | 'all') => void,
   open: (transaction?: Transaction, newValue?: string, property?: string, date?: string) => void,
   property: string,
-  isParent?: boolean,
+  transaction: Transaction | undefined,
 }
 
 export default function RecurEditDialog ({ 
@@ -26,62 +26,85 @@ export default function RecurEditDialog ({
   editType,
   setEditType,
   property,
-  isParent,
+  transaction,
 }: RecurEditDialogProps) {
 
   const handleEditTypeChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setEditType(event.target.value as 'single' | 'future' | 'all')
+    setEditType(event.target.value as RecurrenceEditType)
   }
+
+//TODO: if editing recurrence, only allow editing all
 
   return (
     <SubmittableDialog
     {...dialogProps}
     >
       {
-        isParent &&
+        ((transaction?.isParent) || 
+        (property === 'date') || 
+        (property === 'recurrenceFreq')) &&
 
         <Box display='flex' flexDirection='column' alignItems='center' textAlign='center' gap={4}>
           <WarningTwoTone color='warning' style={{ fontSize: '5rem'}} />
 
-          <Typography variant='h5'>
-            Since this is the parent of a recurring series, this edit will apply to all of the following transactions in the series.
-          </Typography>
+          {
+            transaction?.isParent &&
+
+            <Typography variant='h5'>
+              Since this is the parent of a recurring series, this edit will apply to all of the following transactions in the series.
+            </Typography>
+          }
+
+          {
+            ((!transaction?.isParent) && (property == 'date')) &&
+
+            <Typography variant='h5'>
+              Since the date is being changed, this edit will only apply to this occurrence of the transaction.
+            </Typography>
+          }
+
+          {
+            ((!transaction?.isParent) && (property == 'recurrenceFreq')) &&
+
+            <Typography variant='h5'>
+              Since the recurrence rules are being changed, this edit will apply all of the transactions in the series.
+            </Typography>
+          }
         </Box>
       }
 
       {
-        !isParent && 
+        ((!transaction?.isParent) && 
+        (property !== 'date') &&
+        (property !== 'recurrenceFreq')) && 
 
-      <Box 
-      component='form' 
-      display='flex' 
-      flexDirection='column' 
-      justifyContent='center' 
-      gap={2} 
-      >
-        <RadioGroup value={editType} onChange={handleEditTypeChange}>
-          <FormControlLabel 
-          value='single' 
-          label="Edit only this transaction" 
-          control={<Radio />} 
-          />  
+        <Box 
+        component='form' 
+        display='flex' 
+        flexDirection='column' 
+        justifyContent='center' 
+        gap={2} 
+        >
+          <RadioGroup value={editType} onChange={handleEditTypeChange}>
+            <FormControlLabel 
+            value='single' 
+            label="Edit only this transaction" 
+            control={<Radio />} 
+            />  
+            
+            <FormControlLabel 
+            value='future' 
+            label="Edit this and all future occurrences of this transaction" 
+            control={<Radio />} 
+            />  
 
-          <FormControlLabel 
-          value='future' 
-          label="Edit this and all future occurrences of this transaction" 
-          control={<Radio />} 
-          />  
-
-          {
-            (property !== 'date') &&
             <FormControlLabel 
             value='all' 
             label="Edit all occurrences of this transaction" 
             control={<Radio />} 
             />
-          }
-        </RadioGroup>
-      </Box>         
+          </RadioGroup>
+        </Box>
       }         
     </SubmittableDialog>
   )
@@ -89,7 +112,7 @@ export default function RecurEditDialog ({
 
 export function useRecurEditDialog (
   onSubmit: (
-    editType: 'single' | 'future' | 'all', 
+    editType: RecurrenceEditType, 
     newValue?: string, 
     property?: string,
     transaction?: Transaction,
@@ -98,7 +121,7 @@ export function useRecurEditDialog (
   onCancel?: () => void,
 ) {
   const [transaction, setTransaction] = useState<Transaction>()
-  const [editType, setEditType] = useState<'single' | 'future' | 'all'>('single')
+  const [editType, setEditType] = useState<RecurrenceEditType>('single')
   const [value, setValue] = useState('')
   const [property, setProperty] = useState('')
   const [date, setDate] = useState('')
@@ -110,7 +133,9 @@ export function useRecurEditDialog (
     date?: string,
   ) => {
     if (transaction) setTransaction(transaction)
-    if (transaction?.isParent) setEditType('all')
+
+    if (transaction?.isParent || (property === 'recurrenceFreq')) setEditType('all')
+
     setValue(newValue || '')
     setProperty(property || 'date')
     setDate(date || '')
@@ -145,7 +170,7 @@ export function useRecurEditDialog (
     setEditType: setEditType,
     open: handleOpen,
     property: property,
-    isParent: transaction?.isParent,
+    transaction: transaction,
   } 
 
   return dialogProps

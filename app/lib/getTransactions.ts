@@ -4,7 +4,7 @@ import { RRule, RRuleSet } from "rrule"
 import getLastDayOfMonth from "./dates/getLastDayOfMonth"
 import toBasicDateString from "./dates/toBasicDateString"
 
-import type { Transaction } from '../types'
+import type { RecurrenceException, Transaction } from '../types'
 import type { Session } from "next-auth"
 import { isSameDay } from "./dates/isSameDay"
 
@@ -29,7 +29,7 @@ export default async function getTransactions ( db: Db, session: Session | null,
     $expr: {
       $and: [
         { "$eq": [ "$userId", new ObjectId(session?.user?.id) ]},
-        { "$eq": [ "$isRecurring", true ]},
+        { "$ne": [ "$recurrenceFreq", undefined ]},
         { $lte: [{ $toDate: "$date" }, getNextMonth(date)]},
       ]
     }
@@ -47,8 +47,15 @@ export default async function getTransactions ( db: Db, session: Session | null,
       })
     )
 
-    //Add exclusions to rule set
-    transaction.recurrenceExclusions?.map(exclusion => ruleSet.exdate(exclusion))
+    //Filter exclusions from exceptions and add them to rule set
+    const exceptions = transaction.recurrenceExceptions?.filter(exception => {
+      if (exception.property === 'exclude') {
+        ruleSet.exdate(exception.date)
+        return false
+      }
+
+      return true
+    })
 
     //Create and add recurring transactions to array
     ruleSet.between(date, getLastDayOfMonth(date), true).map(recurDate => {
@@ -62,11 +69,18 @@ export default async function getTransactions ( db: Db, session: Session | null,
         amount: transaction.amount,
         account: transaction.account,
         userId: new ObjectId(session?.user?.id),
-        recurrenceId: transaction.recurrenceId,
-        recurrenceParentId: transaction._id,
         recurrenceFreq: transaction.recurrenceFreq,
         isParent: isParent,
+        ...(!isParent) && {parentId: transaction._id}
       }
+
+      //If date is in exceptions array, then apply the exception
+      exceptions?.filter(exception => {
+        if (isSameDay(exception.date, recurDate)) return true
+      })
+      .map(exception => {
+        newTransaction[exception.property as "title" | "date" | "account" | "amount"] = exception.value
+      })
 
       transactions.push(newTransaction)
     })
