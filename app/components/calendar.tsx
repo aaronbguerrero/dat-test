@@ -68,7 +68,7 @@ export default function Calendar ({ month, setMonth }: Props) {
     setEventToRevert(event)
 
     if (
-      event.event._def.extendedProps.recurrenceParentId && 
+      event.event._def.extendedProps.recurrenceFreq && 
       event?.event?._instance?.range.start && 
       event?.oldEvent?._instance?.range.start
     ) {
@@ -88,9 +88,20 @@ export default function Calendar ({ month, setMonth }: Props) {
     const id = event.event._def.publicId
     const newDate = event.event._instance?.range.start.toISOString()
     
-    await fetch(`/api/transactions/updateTransaction/${id}/date/${newDate}/`)
+    await fetch(`/api/transactions/updateTransaction/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        _id: id,
+        property: 'date',
+        value: newDate,
+      })
+    })
     .then(response => response.json())
     .then(response => {
+      console.log(response)
       if (response.ok === 1) {
         mutate(`/api/transactions/getTransactions/${month}`)
         //TODO: Update month ending amount (should rethink this piece)
@@ -121,11 +132,12 @@ export default function Calendar ({ month, setMonth }: Props) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
+        _id: transaction?._id,
+        ...!transaction?.isParent && { parentId: transaction?.parentId },
         editType: editType,
-        transaction: transaction,
-        originalDate: originalDate,
+        date: transaction?.date,
         property: property,
-        newDate: newDate,
+        value: newDate,
       })
     })
     .then(response => response.json())
@@ -210,12 +222,8 @@ export default function Calendar ({ month, setMonth }: Props) {
             amount: transaction.amount.amount, 
             currency: transaction.amount.currency 
           }),
-          ...transaction.isRecurring && { 
-            isRecurring: transaction.isRecurring 
-          },
-          ...transaction.recurrenceParentId && { 
-            recurrenceParentId: transaction.recurrenceParentId, 
-            recurrenceFreq: transaction.recurrenceFreq 
+          ...transaction.recurrenceFreq && { 
+            recurrenceFreq: transaction.recurrenceFreq, 
           },
         }
 

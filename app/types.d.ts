@@ -16,6 +16,13 @@ declare module 'next-auth' {
 
 export type AccountType = typeof accountTypes[number]
 export type RecurrenceEditType = 'single' | 'future' | 'all'
+export type RecurrenceExceptionType = 'title' | 'date' | 'amount' | 'account' | 'exclude'
+
+export interface RecurrenceException {
+  date: Date,
+  property: RecurrenceExceptionType,
+  value?: string | Date | ObjectId | { amount: number, currency: Dinero.Currency },
+} 
 
 export interface Account {
   readonly _id: ObjectId,
@@ -25,6 +32,8 @@ export interface Account {
   color: string,
 }
 
+export type TransactionProperty = 'title' | 'date' | 'amount' | 'account' | 'recurrenceFreq'
+
 export interface Transaction {
   readonly _id: ObjectId,
   title: string,
@@ -32,10 +41,8 @@ export interface Transaction {
   account: Account._id,
   userId: ObjectId,
   amount: { amount: number, currency: Dinero.Currency },
-  isRecurring?: boolean,
-  recurrenceId?: ObjectId,
   recurrenceFreq?: string,
-  recurrenceExclusions?: Date[],
-  recurrenceParentId?: ObjectId,
+  recurrenceExceptions?: RecurrenceException[],
   isParent?: boolean,
+  parentId?: ObjectId,
 }

@@ -6,9 +6,9 @@ import {
 } from "@mui/material"
 import { ChangeEvent, useState } from "react"
 import SubmittableDialog, { SubmittableDialogProps, useSubmittableDialog } from "./submittableDialog"
+import { DeleteResult, UpdateResult } from "mongodb"
 
 import type { Transaction } from "../../../types"
-import { DeleteResult, UpdateResult } from "mongodb"
 
 export interface DeleteTransactionDialogProps { 
   isRecurring?: boolean,
@@ -16,13 +16,15 @@ export interface DeleteTransactionDialogProps {
   editType: 'single' | 'future' | 'all',
   setEditType: (editType: 'single' | 'future' | 'all') => void,
   open: (transaction: Transaction) => void,
+  transaction: Transaction | undefined,
 }
 
 export default function DeleteTransactionDialog ({ 
   isRecurring, 
   dialogProps,
   editType,
-  setEditType
+  setEditType,
+  transaction,
 }: DeleteTransactionDialogProps) {
 
   const handleEditTypeChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -42,15 +44,19 @@ export default function DeleteTransactionDialog ({
         <RadioGroup value={editType} onChange={handleEditTypeChange}>
           <FormControlLabel 
           value='single' 
-          label="Delete only this transaction" 
+          label="Delete only this occurrence of the transaction" 
           control={<Radio />} 
           />  
 
-          <FormControlLabel 
-          value='future' 
-          label="Delete this and all future occurrences of this transaction" 
-          control={<Radio />} 
-          />  
+          {
+            !transaction?.isParent && 
+
+            <FormControlLabel 
+            value='future' 
+            label="Delete this and all future occurrences of this transaction" 
+            control={<Radio />} 
+            />
+          }  
 
           <FormControlLabel 
           value='all' 
@@ -96,6 +102,7 @@ export function useDeleteTransactionDialog (onDelete: (editType: 'single' | 'fut
     editType: editType,
     setEditType: setEditType,
     open: handleOpen,
+    transaction: transaction,
   } 
 
   return dialogProps

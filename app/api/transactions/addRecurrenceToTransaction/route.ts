@@ -15,10 +15,8 @@ export async function PATCH(request: NextRequest) {
   const response = await db.collection("transactions").findOneAndUpdate(
     { _id: new ObjectId(body._id) },
     { $set: {
-      isRecurring: true,
-      recurrenceId: new ObjectId,
       recurrenceFreq: body.rule,
-      recurrenceExclusions: [],
+      recurrenceExceptions: [],
     }},
     { returnDocument: 'after' },
   )
