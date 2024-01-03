@@ -177,7 +177,7 @@ export default function Settings () {
                 disabled={isUserSettingsEditing}
                 >
                   <DeleteTwoTone />
-                  Delete Account 
+                  Delete Your Entire Account 
                 </Button>
               }
             </Stack>
