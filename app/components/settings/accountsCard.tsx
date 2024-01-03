@@ -1,4 +1,4 @@
-import { Card, CardHeader, Divider, IconButton, List, ListItemButton, ListItemIcon, Skeleton, Stack, Typography } from "@mui/material"
+import { Box, Card, CardHeader, Divider, IconButton, List, ListItemButton, ListItemIcon, Skeleton, Stack, Typography } from "@mui/material"
 import useSWR from 'swr'
 import { useEffect, useState } from "react"
 import BasicToast, { useToast } from "../ui/toasts/basicToast"
@@ -8,13 +8,14 @@ import EditAccountDialog, { useEditAccountDialog } from "../ui/dialogs/editAccou
 import AccountIcon from "../ui/accountIcon"
 
 import type { Account, AccountType } from "../../types"
+import type { DeleteResult, ModifyResult } from "mongodb"
 
 export default function AccountsCard ({}) {
   const toast = useToast()
   
   const {data: accounts, error: accountsError, mutate } = useSWR<Account[]>(`/api/accounts/getAccounts`)
   useEffect(() => {
-  if (accountsError) toast.open("Sorry! There was a problem loading the month data. Please refresh the page.", 'error')
+    if (accountsError) toast.open("Sorry! There was a problem loading the month data. Please refresh the page.", 'error')
     else toast.close()
   }, [accountsError, toast])
   
@@ -62,8 +63,56 @@ export default function AccountsCard ({}) {
   const handleEditAccountClick = (account: Account) => {
     editAccountDialog.open(account)
   }
+
+  const handleEditAccount = async (account: Account, newValue: string, property: string | undefined) => {
+    return await fetch(`/api/accounts/updateAccount/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        _id: account._id,
+        property: property,
+        value: newValue,
+      })
+    })
+    .then(response => response.json())
+    .then(response => {
+      if (response.ok === 1) {
+        mutate()
+
+        toast.open("Account edited successfully!", 'success')
+      }
+      else toast.open("Sorry! There was a problem editing the account, please try again.", 'error')
+      
+      return response as Promise<ModifyResult<Account>>
+    })
+  }
   
-  const editAccountDialog = useEditAccountDialog()
+  const handleDeleteAccount = async (account: Account) => {
+    return await fetch(`/api/accounts/deleteAccount`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        _id: account._id,
+      })
+    })
+    .then(response => response.json())
+    .then((response: DeleteResult) => {
+      if (response.acknowledged) {
+        editAccountDialog.close()
+
+        mutate()
+
+        return true
+      }
+      else return false
+    })
+  }
+
+  const editAccountDialog = useEditAccountDialog(handleEditAccount, handleDeleteAccount)
 
   return (
     <Card
@@ -85,7 +134,10 @@ export default function AccountsCard ({}) {
 
       <List>
         {isAccountsLoading ?
-        <Skeleton height={50} />
+        <Box paddingX={2}>
+          <Skeleton height={50} />
+          <Skeleton height={50} />
+        </Box>
         :
         accounts?.map(account => {
           return (

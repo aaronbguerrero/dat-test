@@ -3,23 +3,22 @@ import { AccountBalanceTwoTone, CreditCardTwoTone, RequestQuoteTwoTone, SavingsT
 import type { AccountType } from "../../types"
 
 type Props = {
+  color?: string,
   type: AccountType,
 }
 
-export default function AccountIcon ({ type }: Props) {
+export default function AccountIcon ({ color, type }: Props) {
   switch (type) {
     case 'checking':
-      return <AccountBalanceTwoTone />
+      return <AccountBalanceTwoTone sx={{ color: color }} />
       
     case 'creditCard':
-      return <CreditCardTwoTone />
+      return <CreditCardTwoTone sx={{ color: color }} />
       
     case 'savings':
-      return <SavingsTwoTone />
+      return <SavingsTwoTone sx={{ color: color }} />
       
     case 'loan':
-      return <RequestQuoteTwoTone />
+      return <RequestQuoteTwoTone sx={{ color: color }} />
   }
-
-  return null
 }

@@ -42,9 +42,8 @@ export default function AccountSelector ({ value, onChange, disabled, required }
             return <MenuItem 
             value={account._id.toString()}
             key={account._id.toString()}
-            
             >
-              <ListItemIcon>
+              <ListItemIcon sx={{ color: account.color }}>
                 <AccountIcon type={account.type} />
               </ListItemIcon>
               {account.title}
