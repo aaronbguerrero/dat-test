@@ -10,32 +10,24 @@ import type { Account, AccountType } from "../../../types"
 import toPrettyAccountType from "../../../lib/toPrettyAccountType"
 import EditableColorPicker from "../formElements/editableColorPicker"
 import { ModifyResult } from "mongodb"
+import DeleteAccountDialog, { DeleteAccountDialogProps, useDeleteAccountDialog } from "./deleteAccountDialog"
 
 interface EditAccountDialogProps {
   dialogProps: BaseDialogProps,
+  deleteAccountDialog: DeleteAccountDialogProps,
   account?: Account,
   open: (account: Account) => void,
+  close: () => void,
   handleSubmit: (newValue: string, property: string | undefined) => Promise<boolean>,
-  handleDelete: () => Promise<boolean>,
-  title: string,
-  handleTitleChange: (event: ChangeEvent<HTMLInputElement>) => void,
-  type: AccountType,
-  handleTypeChange: (event: SelectChangeEvent) => void,
-  color: string,
-  handleColorChange: (color: string) => void,
+  handleDelete: () => void,
 }
 
 export default function EditAccountDialog ({ 
   dialogProps, 
+  deleteAccountDialog,
   account,
-  title,
   handleSubmit,
   handleDelete,
-  handleTitleChange,
-  type, 
-  handleTypeChange, 
-  color, 
-  handleColorChange,
 }: EditAccountDialogProps) {
   if (!account) return null
 
@@ -45,7 +37,7 @@ export default function EditAccountDialog ({
           <EditableInputField 
           id='title'
           label="Account Name"
-          value={title}
+          value={account.title}
           onSubmit={handleSubmit}
           />
 
@@ -78,38 +70,28 @@ export default function EditAccountDialog ({
           onClick={handleDelete}
           >
             <DeleteTwoTone />
-            Delete Account
+            Delete {account.title}
           </Button>
         </Box>
+
+        <DeleteAccountDialog {...deleteAccountDialog} />
     </BaseDialog>
   )
 }
 
 export function useEditAccountDialog (
   onSubmit: (account: Account, newValue: string, property: string | undefined) => Promise<ModifyResult<Account>>,
-  onDelete: () => Promise<boolean>
+  onDelete: (account: Account) => Promise<boolean>
 ) {
   const [account, setAccount] = useState<Account>()
-  
-  const [title, setTitle] = useState(account?.title || '')
-  const handleTitleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setTitle(event.target.value)
-  }
-  
-  //TODO: Different default
-  const [type, setType] = useState<AccountType>('checking')
-  const handleTypeChange = (event: SelectChangeEvent) => {
-    setType(event.target.value as AccountType)
-  }
-  
-  const [color, setColor] = useState('')
-  const handleColorChange = (color: string) => {
-    setColor(color)
-  }
 
   const handleOpen = (account: Account) => {
     setAccount(account)
     dialogHook.open()
+  }
+
+  const handleClose = () => {
+    dialogHook.close()
   }
 
   const handleSubmit = async (newValue: string, property: string | undefined) => {
@@ -125,31 +107,21 @@ export function useEditAccountDialog (
   }
 
   const handleDelete = async () => {
-    return await onDelete()
+    if (account) deleteAccountDialog.open(account)
   }
 
-  useEffect(() => {
-    if (account) {
-      setTitle(account.title)
-      setType(account.type)
-      setColor(account.color)
-    }
-  }, [account])
+  const deleteAccountDialog = useDeleteAccountDialog(onDelete)
 
   const dialogHook = useDialog()
 
   const dialogProps: EditAccountDialogProps = {
     dialogProps: dialogHook,
+    deleteAccountDialog: deleteAccountDialog,
     account: account,
     open: handleOpen,
+    close: handleClose,
     handleSubmit: handleSubmit,
     handleDelete: handleDelete,
-    title: title,
-    handleTitleChange: handleTitleChange,
-    type: type,
-    handleTypeChange: handleTypeChange,
-    color: color,
-    handleColorChange: handleColorChange,
   }
 
   return dialogProps

@@ -8,7 +8,7 @@ import EditAccountDialog, { useEditAccountDialog } from "../ui/dialogs/editAccou
 import AccountIcon from "../ui/accountIcon"
 
 import type { Account, AccountType } from "../../types"
-import type { ModifyResult } from "mongodb"
+import type { DeleteResult, ModifyResult } from "mongodb"
 
 export default function AccountsCard ({}) {
   const toast = useToast()
@@ -88,12 +88,30 @@ export default function AccountsCard ({}) {
       return response as Promise<ModifyResult<Account>>
     })
   }
-
-  const handleDeleteAccount = async () => {
-    console.log("DELETE ACCOUNT")
-    return true
-  }
   
+  const handleDeleteAccount = async (account: Account) => {
+    return await fetch(`/api/accounts/deleteAccount`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        _id: account._id,
+      })
+    })
+    .then(response => response.json())
+    .then((response: DeleteResult) => {
+      if (response.acknowledged) {
+        editAccountDialog.close()
+
+        mutate()
+
+        return true
+      }
+      else return false
+    })
+  }
+
   const editAccountDialog = useEditAccountDialog(handleEditAccount, handleDeleteAccount)
 
   return (
@@ -117,7 +135,7 @@ export default function AccountsCard ({}) {
       <List>
         {isAccountsLoading ?
         <Box paddingX={2}>
-        <Skeleton height={50} />
+          <Skeleton height={50} />
           <Skeleton height={50} />
         </Box>
         :
