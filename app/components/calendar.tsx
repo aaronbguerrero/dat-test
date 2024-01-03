@@ -17,6 +17,7 @@ import EditTransactionDialog, { useEditTransactionDialog } from "./ui/dialogs/ed
 
 import type { RecurrenceEditType, Transaction } from '../types'
 import { ModifyResult } from "mongodb"
+import isDateInMonth from "../lib/dates/isDateInMonth"
 
 type Props = { 
   month: string, 
@@ -202,7 +203,15 @@ export default function Calendar ({ month, setMonth }: Props) {
       const newEvents: EventInput[] = []
       
       transactions.forEach((transaction: Transaction) => {
-        if (transaction.amount.amount ===  null || transaction.amount.currency === null) return
+        if (
+          //Check for accidental null amounts
+          transaction.amount.amount ===  null || 
+          transaction.amount.currency === null //||
+          // //Ensure only transactions in the current month are displayed
+          // !isDateInMonth(transaction.date, month)
+          ) {
+            return //TODO: Better error here (toast?)
+          }
 
         //Create FullCalendar event
         const event: EventInput = {

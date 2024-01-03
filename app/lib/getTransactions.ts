@@ -14,51 +14,85 @@ export default async function getTransactions ( db: Db, session: Session | null,
 
   //Get individual transactions in array
   const transactions = await db.collection<Transaction>("transactions").find({
-    $expr: {
-      $and: [
-        { "$eq": [ "$userId", new ObjectId(session?.user?.id) ]},
-        { "$eq": [{ "$month": "$date" }, month ]},
-        { "$eq": [{ "$year": "$date" }, year ]},
-        { "$eq": [ "$isRecurring", false ]}, //Do not include the original recurring transactions, they will be setup by the recurring rule
-      ]
-    }
-  }).toArray()
+    $or: [
+      {"recurrenceFreq": { "$exists": false }, //Do not include the original recurring transactions, they will be setup by the recurring rule
+      $expr: {
+        $and: [
+          { "$eq": [ "$userId", new ObjectId(session?.user?.id) ]},
+          { "$eq": [{ "$month": "$date" }, month ]},
+          { "$eq": [{ "$year": "$date" }, year ]},
+        ]
+      }},
 
+      
+    ]
+  }).toArray()
+  
   //Get recurring transactions and add to array
   const recurringTransactions = await db.collection<Transaction>("transactions").find({
-    $expr: {
-      $and: [
-        { "$eq": [ "$userId", new ObjectId(session?.user?.id) ]},
-        { "$ne": [ "$recurrenceFreq", undefined ]},
-        { $lte: [{ $toDate: "$date" }, getNextMonth(date)]},
-      ]
-    }
+    $or: 
+    [
+      //This month's recurring transactions
+      {"recurrenceFreq": { "$exists": true }, //Only include the original recurring transactions
+
+      $expr: {
+        $and: [
+          { "$eq": [ "$userId", new ObjectId(session?.user?.id) ]},
+          { $lte: [{ $toDate: "$date" }, getNextMonth(date)]},
+        ]
+      }},
+
+      //Other month's recurring transaction exceptions
+      {
+        $and: [
+          {recurrenceExceptions: {
+            $elemMatch: {
+              property: "date",
+              value: {
+                $gte: date,
+                $lte: getNextMonth(date)
+              }
+           }
+          }},
+          
+          { "userId": new ObjectId(session?.user?.id) }
+        ]
+      }
+    ]
   }).toArray()
 
   recurringTransactions.map((transaction) => {
     const ruleOptions = RRule.parseString(transaction.recurrenceFreq || "")
 
     const ruleSet = new RRuleSet()
-
+    
     ruleSet.rrule(
       new RRule({
         ...ruleOptions,
         dtstart: transaction.date,
       })
     )
-
-    //Filter exclusions from exceptions and add them to rule set
+      
     const exceptions = transaction.recurrenceExceptions?.filter(exception => {
+      //Filter exclusions from exceptions and add them to rule set
       if (exception.property === 'exclude') {
         ruleSet.exdate(exception.date)
+        return false
+      }
+      
+      //Filter date exceptions and add them to rule set
+      if (exception.property === 'date') {
+        ruleSet.rdate(exception.value as Date)
+        ruleSet.exdate(exception.date as Date)
         return false
       }
 
       return true
     })
-
+    
     //Create and add recurring transactions to array
     ruleSet.between(date, getLastDayOfMonth(date), true).map(recurDate => {
+
       //Build and add a transaction for each recurrence
       const isParent = isSameDay(recurDate, transaction.date)
 
@@ -79,7 +113,7 @@ export default async function getTransactions ( db: Db, session: Session | null,
         if (isSameDay(exception.date, recurDate)) return true
       })
       .map(exception => {
-        newTransaction[exception.property as "title" | "date" | "account" | "amount"] = exception.value
+        newTransaction[exception.property as "title" | "account" | "amount"] = exception.value
       })
 
       transactions.push(newTransaction)
