@@ -5,7 +5,7 @@ import daygrid from "@fullcalendar/daygrid"
 import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction"
 import { EventClickArg, EventInput, EventChangeArg, EventContentArg, CalendarApi } from "@fullcalendar/core"
 import { useTheme } from "@mui/material/styles"
-import { Box, Paper, Typography } from "@mui/material"
+import { Box, Paper, Tooltip, Typography } from "@mui/material"
 import Dinero from 'dinero.js'
 import RecurEditDialog, { useRecurEditDialog } from "./ui/dialogs/recurEditDialog"
 import BasicToast, { useToast } from "./ui/toasts/basicToast"
@@ -45,7 +45,11 @@ export default function Calendar ({ month, setMonth }: Props) {
   useEffect(() => {
     if (calendarRef.current) {
       setCalendarApi(calendarRef.current.getApi())
-      calendarApi?.gotoDate(month)
+
+      //queueMicrotask is a workaround for FullCalendar throwing an error when changing date and rendering tooltips
+      queueMicrotask(() => {
+        calendarApi?.gotoDate(month)
+      })
     }
   }, [calendarApi, month])
   
@@ -169,29 +173,25 @@ export default function Calendar ({ month, setMonth }: Props) {
     eventToRevert?.revert()
     setEventToRevert(undefined)
   }
-
-  //TODO: Render recurring events on top of each day
-
+  
   // Event content and tooltips
-  // TODO: fix flushSync error
-  //Only happens when non-standard html is passed in
   const renderEventContent = (event: EventContentArg) => {
+    //TODO: Render recurring events on top of each day
+
     return (
-      { html: `<div>${event.event._def.title}</div>`}
-      // <Tooltip arrow placement='top'
-      // title={
-      //   <Box>
-      //     <Typography variant='subtitle2'>{event.event._def.title}</Typography>
+      <Tooltip arrow placement='top'
+      title={
+        <Box>
+          <Typography variant='subtitle2'>{event.event._def.title}</Typography>
 
-      //     <Typography variant='caption'>{event.event._def.extendedProps.amount.toFormat()}</Typography>
-      //   </Box>
-      // }>
+          <Typography variant='caption'>{event.event._def.extendedProps.amount.toFormat()}</Typography>
+        </Box>
+      }>
 
-      //   <Box sx={{ paddingX: '0.25rem' }}>
-      //     <Typography variant='caption'>{event.event._def.title}</Typography>
-      //   </Box>
-      // </Tooltip>
-      
+        <Box sx={{ paddingX: '0.25rem' }}>
+          <Typography variant='caption'>{event.event._def.title}</Typography>
+        </Box>
+      </Tooltip>
     )
   }
   
