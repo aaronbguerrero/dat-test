@@ -5,7 +5,7 @@ import daygrid from "@fullcalendar/daygrid"
 import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction"
 import { EventClickArg, EventInput, EventChangeArg, EventContentArg, CalendarApi } from "@fullcalendar/core"
 import { useTheme } from "@mui/material/styles"
-import { Box, Paper, Typography } from "@mui/material"
+import { Box, Paper, Tooltip, Typography } from "@mui/material"
 import Dinero from 'dinero.js'
 import RecurEditDialog, { useRecurEditDialog } from "./ui/dialogs/recurEditDialog"
 import BasicToast, { useToast } from "./ui/toasts/basicToast"
@@ -17,6 +17,7 @@ import EditTransactionDialog, { useEditTransactionDialog } from "./ui/dialogs/ed
 
 import type { RecurrenceEditType, Transaction } from '../types'
 import { ModifyResult } from "mongodb"
+import isDateInMonth from "../lib/dates/isDateInMonth"
 
 type Props = { 
   month: string, 
@@ -44,7 +45,11 @@ export default function Calendar ({ month, setMonth }: Props) {
   useEffect(() => {
     if (calendarRef.current) {
       setCalendarApi(calendarRef.current.getApi())
-      calendarApi?.gotoDate(month)
+
+      //queueMicrotask is a workaround for FullCalendar throwing an error when changing date and rendering tooltips
+      queueMicrotask(() => {
+        calendarApi?.gotoDate(month)
+      })
     }
   }, [calendarApi, month])
   
@@ -68,7 +73,7 @@ export default function Calendar ({ month, setMonth }: Props) {
     setEventToRevert(event)
 
     if (
-      event.event._def.extendedProps.recurrenceParentId && 
+      event.event._def.extendedProps.recurrenceFreq && 
       event?.event?._instance?.range.start && 
       event?.oldEvent?._instance?.range.start
     ) {
@@ -88,9 +93,20 @@ export default function Calendar ({ month, setMonth }: Props) {
     const id = event.event._def.publicId
     const newDate = event.event._instance?.range.start.toISOString()
     
-    await fetch(`/api/transactions/updateTransaction/${id}/date/${newDate}/`)
+    await fetch(`/api/transactions/updateTransaction/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        _id: id,
+        property: 'date',
+        value: newDate,
+      })
+    })
     .then(response => response.json())
     .then(response => {
+      console.log(response)
       if (response.ok === 1) {
         mutate(`/api/transactions/getTransactions/${month}`)
         //TODO: Update month ending amount (should rethink this piece)
@@ -121,11 +137,12 @@ export default function Calendar ({ month, setMonth }: Props) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
+        _id: transaction?._id,
+        ...!transaction?.isParent && { parentId: transaction?.parentId },
         editType: editType,
-        transaction: transaction,
-        originalDate: originalDate,
+        date: transaction?.date,
         property: property,
-        newDate: newDate,
+        value: newDate,
       })
     })
     .then(response => response.json())
@@ -156,29 +173,25 @@ export default function Calendar ({ month, setMonth }: Props) {
     eventToRevert?.revert()
     setEventToRevert(undefined)
   }
-
-  //TODO: Render recurring events on top of each day
-
+  
   // Event content and tooltips
-  // TODO: fix flushSync error
-  //Only happens when non-standard html is passed in
   const renderEventContent = (event: EventContentArg) => {
+    //TODO: Render recurring events on top of each day
+
     return (
-      { html: `<div>${event.event._def.title}</div>`}
-      // <Tooltip arrow placement='top'
-      // title={
-      //   <Box>
-      //     <Typography variant='subtitle2'>{event.event._def.title}</Typography>
+      <Tooltip arrow placement='top'
+      title={
+        <Box>
+          <Typography variant='subtitle2'>{event.event._def.title}</Typography>
 
-      //     <Typography variant='caption'>{event.event._def.extendedProps.amount.toFormat()}</Typography>
-      //   </Box>
-      // }>
+          <Typography variant='caption'>{event.event._def.extendedProps.amount.toFormat()}</Typography>
+        </Box>
+      }>
 
-      //   <Box sx={{ paddingX: '0.25rem' }}>
-      //     <Typography variant='caption'>{event.event._def.title}</Typography>
-      //   </Box>
-      // </Tooltip>
-      
+        <Box sx={{ paddingX: '0.25rem' }}>
+          <Typography variant='caption'>{event.event._def.title}</Typography>
+        </Box>
+      </Tooltip>
     )
   }
   
@@ -190,7 +203,15 @@ export default function Calendar ({ month, setMonth }: Props) {
       const newEvents: EventInput[] = []
       
       transactions.forEach((transaction: Transaction) => {
-        if (transaction.amount.amount ===  null || transaction.amount.currency === null) return
+        if (
+          //Check for accidental null amounts
+          transaction.amount.amount ===  null || 
+          transaction.amount.currency === null //||
+          // //Ensure only transactions in the current month are displayed
+          // !isDateInMonth(transaction.date, month)
+          ) {
+            return //TODO: Better error here (toast?)
+          }
 
         //Create FullCalendar event
         const event: EventInput = {
@@ -211,12 +232,8 @@ export default function Calendar ({ month, setMonth }: Props) {
             amount: transaction.amount.amount, 
             currency: transaction.amount.currency 
           }),
-          ...transaction.isRecurring && { 
-            isRecurring: transaction.isRecurring 
-          },
-          ...transaction.recurrenceParentId && { 
-            recurrenceParentId: transaction.recurrenceParentId, 
-            recurrenceFreq: transaction.recurrenceFreq 
+          ...transaction.recurrenceFreq && { 
+            recurrenceFreq: transaction.recurrenceFreq, 
           },
         }
 

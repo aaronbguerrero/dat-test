@@ -1,12 +1,11 @@
-import { Dinero } from "dinero.js"
 import { ObjectId } from "mongodb"
 import { getServerSession } from "next-auth"
 import { NextRequest, NextResponse } from "next/server"
 import { RRule } from "rrule"
 import clientPromise from "../../../lib/database"
-
-import type { RecurrenceEditType, Transaction } from '../../../types'
 import { AuthOptions } from "../../auth/[...nextauth]/route"
+
+import type { RecurrenceEditType, RecurrenceException, RecurrenceExceptionType, Transaction, TransactionProperty } from '../../../types'
 
 //Update Recurring Transaction 
 
@@ -16,15 +15,15 @@ export async function PATCH(request: NextRequest) {
   const body: {
     _id: ObjectId,
     editType: RecurrenceEditType,
-    recurrenceParentId: ObjectId,
+    parentId?: ObjectId,
     date: Date, //date to change,
-    property: string,
+    property: TransactionProperty,
     value: string,
   } = await request.json()
   
   let value: string | Date | { amount: number, currency: Dinero.Currency } = body.value
-  const parentId = new ObjectId(body.recurrenceParentId)
-  const date = new Date(body.date)
+  const id: ObjectId = new ObjectId(body.parentId || body._id)
+  const date =  new Date(body.date)
 
   switch (body.property) {
     case 'date':
@@ -34,131 +33,91 @@ export async function PATCH(request: NextRequest) {
     case 'amount':
       value = { amount: parseInt(value), currency: session?.user?.currencyUsed || 'USD' }
       break
+
+    //Check to make sure recurrence is not trying to be edited, return error if it is
+    case ('recurrenceFreq'):
+      if (body.editType !== 'all') return NextResponse.json({ status: 500 })
   }
   
   const client = await clientPromise
   const db = client.db("userData")
 
-  //TODO: TEST ALL ERRORS
-  const parent = await db.collection<Transaction>("transactions").findOne({ _id: parentId })
-  if (!parent) return NextResponse.json({ error: 'Parent transaction not found' }, { status: 404 })
-
   if (body.editType === 'single') {
-      //Create exclusion in parent transaction, then create new transaction in it's place
-      const response = await db.collection("transactions").updateOne(
-        { _id: parentId },
-        { $push: { recurrenceExclusions: new Date(date) }}
-      )
-      .then(async () => {
-        //Add excluded date to already pulled parent Transaction (to avoid another db call)
-        parent.recurrenceExclusions?.push(date)
+    //Create exception in parent transaction
+    const response = await db.collection<Transaction>("transactions").findOneAndUpdate(
+      { _id: id },
+      { $push: { recurrenceExceptions: {
+        date: date,
+        property: body.property as RecurrenceExceptionType,
+        value: value,
+      }}},
+      { returnDocument: 'after' },
+    )
 
-        const newTransactionProperties = {
-          [body.property]: value,
-          isRecurring: false,
-          _id: new ObjectId(),
-          date: (body.property === 'date') ? value : date,
-        }
-        const newTransaction = {...parent, ...newTransactionProperties}
-        delete newTransaction.recurrenceFreq
-        delete newTransaction.recurrenceExclusions
+    if (response.ok === 1) {
+      const newTransactionProperties = {
+        [body.property]: value,
+        _id: body._id,
+        date: (body.property === 'date') ? value as Date : date,
+      }
+      const newTransaction = {...response.value, ...newTransactionProperties} as Transaction
 
-        return await db.collection("transactions").insertOne(newTransaction)
-      })
-      
-    if (response?.insertedId) {
-      const newTransaction = await db.collection<Transaction>("transactions")
-      .findOne({ _id: response.insertedId })
-
-      return NextResponse.json(newTransaction)
+      response.value = newTransaction
+      return NextResponse.json(response)
     }
+
     else return NextResponse.json({ status: 500 })
   }
   
   else if (body.editType === 'future') {    
     //Update end date in parent transaction, create new recurring transaction in it's place
     //Get recurrence rules from parent
-
-      //TODO: what to do when it's the parent transaction
-
-    
+    const parent = await db.collection<Transaction>("transactions").findOne({ _id: id })
+    if (!parent) return NextResponse.json({ error: 'Parent transaction not found' }, { status: 404 })
 
     const ruleOptions = RRule.parseString(parent.recurrenceFreq || '')
-    const newRuleOptions = RRule.parseString(parent.recurrenceFreq || '')
-
-    //Get original end date and count
-    const originalEndDate = ruleOptions.until
-    let originalEndCount = ruleOptions.count
+    const originalRule = new RRule({ ...ruleOptions, dtstart: parent.date})
     
-    //Adjust count to exclude previous dates
-    if (originalEndCount) {
-      //Get count for original rule
-      const originalRuleOptions = { ...ruleOptions, dtstart: parent.date}
-      const originalRule = new RRule(originalRuleOptions)
-      originalEndCount = originalRule.between(date, new Date('9999-12-31'), true).length
-
-      //Add count for new rule and remove end date
-      const endDate = date
-      endDate.setDate(endDate.getDate() - 1)
-      ruleOptions.count = originalRule.between(parent.date, endDate, true).length
-      ruleOptions.until = undefined
-
-    } else {
-      //Add new end date and remove any count
-      const endDate = date
-      endDate.setDate(endDate.getDate() - 1)
-      ruleOptions.until = new Date(endDate)
-      ruleOptions.count = undefined
-    }
-
-    //Create new transaction
-    newRuleOptions.until = originalEndDate
-    newRuleOptions.count = originalEndCount
-
-    const newRule = new RRule(newRuleOptions)
-    const newProperties = {
-      [body.property]: value,
-      _id: new ObjectId(),
-      date: (body.property === 'date') ? value : date,
-      isRecurring: true,
-      recurrenceFreq: newRule.toString(),
-      recurrenceExclusions: parent.recurrenceExclusions || [],
-    }
-    const newTransaction = {...parent, ...newProperties}
-
-    const response = await db.collection("transactions").insertOne(newTransaction)
-    .then(async response => {
-      if (response.insertedId) {
-        //Once created, update recurrence rule in parent (if needed)
-        //Delete parent
-        if ((ruleOptions.count === 0) || (ruleOptions.until && (new Date(ruleOptions.until) < new Date(parent.date)))) {
-          await db.collection("transactions").deleteOne({ _id: parentId })
-          //TODO: If delete fails, need to log to admin (user does not need to know)
-          
-          return { acknowledged: true }
-        }
-
-        //Update parent
-        else return await db.collection("transactions").updateOne(
-          { _id: parentId },
-          { $set: { recurrenceFreq: new RRule(ruleOptions).toString() }}
-        )
+    const newExceptions = originalRule.between(date, new Date('9999-12-31'), true)
+    .map(exception => {
+      const newException: RecurrenceException = {
+        date: exception,
+        property: body.property as RecurrenceExceptionType,
+        value: value,
       }
+
+      return newException
     })
 
-    if (response?.acknowledged === true) return NextResponse.json(newTransaction)
-    else return NextResponse.json({ status: 500 })
+    const response = await db.collection<Transaction>("transactions").findOneAndUpdate(
+      { _id: id },
+      { $push: { recurrenceExceptions: { $each: newExceptions }}},
+      { returnDocument: 'after' },
+    )
 
+    if (response?.ok === 1) {
+      const newProperties = {
+        _id: body._id,
+        [body.property]: value,
+        date: (body.property === 'date') ? value : date,
+      }
+
+      const newTransaction = {...parent, ...newProperties} as Transaction
+      response.value = newTransaction
+      
+      return NextResponse.json(response)
+    }
+    else return NextResponse.json({ status: 500 })
   }
   
   else if (body.editType === 'all') {
-    const response = await db.collection("transactions").updateMany(
-      { recurrenceId: parent?.recurrenceId },
-      { $set: {[body.property]: value}}
+    const response = await db.collection<Transaction>("transactions").findOneAndUpdate(
+      { _id: id },
+      { $set: {[body.property]: value}},
+      { returnDocument: 'after' },
       )
 
-      //TODO: Return current transaction
-      if (response?.acknowledged) return NextResponse.json(true)
+      if (response?.ok === 1) return NextResponse.json(response)
       else return NextResponse.json({ status: 500 })
   }
 

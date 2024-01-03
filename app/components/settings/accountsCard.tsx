@@ -31,7 +31,17 @@ export default function AccountsCard ({}) {
   }
 
   const handleAddAccount = async (title: string, type: AccountType, color: string) => {
-    return await fetch(`/api/accounts/addAccount/${encodeURIComponent(title)}/${type}/${encodeURIComponent(color)}`)
+    return await fetch(`/api/accounts/addAccount/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: title,
+        type: type,
+        color: color,
+      })
+    })
     .then(response => response.json())
     .then(response => {
       if (response.acknowledged === true) {

@@ -5,7 +5,6 @@ import clientPromise from '../../../lib/database'
 import { ObjectId } from "mongodb"
 
 //Add Transaction to DB
-
 export async function POST(request: NextRequest) {
   const body: {
     date: Date,
@@ -29,11 +28,9 @@ export async function POST(request: NextRequest) {
       date: new Date(body.date),
       userId: new ObjectId(session?.user?.id),
       account: new ObjectId(body.account),
-      isRecurring: body.recurrence ? true : false,
       ...(body.recurrence && {
-        recurrenceId: new ObjectId,
         recurrenceFreq: body.recurrence,
-        recurrenceExclusions: [],
+        recurrenceExceptions: [],
       })
       
     }

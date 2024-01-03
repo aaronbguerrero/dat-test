@@ -18,10 +18,10 @@ import { z } from 'zod'
 import EditableRecurrenceSelector from '../formElements/editableRecurrenceSelector'
 import currencySchema from '../../../schemas/currencySchema'
 
-import type { Transaction } from '../../../types'
+import type { RecurrenceEditType, Transaction } from '../../../types'
 import { Session } from 'next-auth'
 import EditableAccountSelector from '../formElements/editableAccountSelector'
-import { ModifyResult } from 'mongodb'
+import { DeleteResult, ModifyResult, UpdateResult } from 'mongodb'
 
 export type EditTransactionDialogProps = { 
   dialogProps: BaseDialogProps,
@@ -88,14 +88,14 @@ export default function EditTransactionDialog ({
           {transaction.title}
 
           {(
-            transaction.recurrenceId && 
+            isRecurring && 
             <Tooltip title={`This transaction is ${transaction.isParent ? "the parent" : "part"} of a recurring series`}>
               <Box display='flex' alignItems='center'>
-              <EventRepeatTwoTone 
-              fontSize='small' 
-              color='info' 
-              sx={{ marginLeft: '1rem' }} 
-              />
+                <EventRepeatTwoTone 
+                fontSize='small' 
+                color='info' 
+                sx={{ marginLeft: '1rem' }} 
+                />
 
                 {
                   transaction.isParent &&
@@ -174,7 +174,7 @@ export default function EditTransactionDialog ({
             disabled={isEditing}
             >
               <LoopTwoTone />
-              Recurrence
+              Add Recurrence
             </Button>
           }
 
@@ -234,11 +234,11 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
   //States and handlers
   const [transaction, setTransaction] = useState<Transaction>()
   const [isEditing, setIsEditing] = useState(false)
-  const [isRecurring, setIsRecurring] = useState<boolean>((transaction?.recurrenceParentId || transaction?.isRecurring) ? true : false)
+  const [isRecurring, setIsRecurring] = useState<boolean>((transaction?.recurrenceFreq) ? true : false)
   const [isAddingRecur, setIsAddingRecur] = useState<boolean>(false)
-
+  
   useEffect(() => {
-    if (transaction?.recurrenceParentId || transaction?.isRecurring || transaction?.recurrenceId) setIsRecurring(true)
+    if (transaction?.recurrenceFreq) setIsRecurring(true)
     else setIsRecurring(false)
   }, [transaction])
 
@@ -249,7 +249,8 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
   }
   
   const handleOpen = (transactionToOpen: Transaction | undefined) => {
-    if (transactionToOpen?.recurrenceParentId || transactionToOpen?.isRecurring) setIsRecurring(true)
+    //Set isRecurring on open to prevent flash from useEffect
+    if (transactionToOpen?.recurrenceFreq) setIsRecurring(true)
     else setIsRecurring(false)
 
     setTransaction(transactions?.find(transaction => transaction._id === transactionToOpen?._id))
@@ -275,43 +276,60 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
   const handleAddRecurrence = async (newValue: string, newProperty: string) => {
     if (!transaction) return false
 
-    const response = await fetch(`/api/transactions/addRecurrenceToTransaction/${transaction._id}/${newValue}`)
-      .then(response => response.json())
-      .then(response => {
-        if (response.ok === 1) {
-          console.log("Res", response.value)
-          setTransaction(response.value)
-          
-          setIsAddingRecur(false)
-          setIsEditing(false)
-          setIsRecurring(true)
-
-          mutate(`/api/transactions/getTransactions/${toMonthString(new Date(transaction.date))}`)
-          
-          toast.open("Recurrence added successfully!", 'success')
-
-          return true
-        } 
-        else {
-          toast.open('Sorry! There was a problem adding recurrence to the transaction. Please try again.', 'error')
-          
-          setIsAddingRecur(true)
-          setIsEditing(true)
-
-          return false
-        }
+    const response = await fetch(`/api/transactions/addRecurrenceToTransaction/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        _id: transaction._id,
+        rule: newValue,
       })
+    })
+    .then(response => response.json())
+    .then(response => {
+      if (response.ok === 1) {
+        setTransaction(response.value)
+        
+        setIsAddingRecur(false)
+        setIsEditing(false)
+        setIsRecurring(true)
 
-      return response
+        mutate(`/api/transactions/getTransactions/${toMonthString(new Date(transaction.date))}`)
+        
+        toast.open("Recurrence added successfully!", 'success')
+
+        return true
+      } 
+      else {
+        toast.open('Sorry! There was a problem adding recurrence to the transaction. Please try again.', 'error')
+        
+        setIsAddingRecur(true)
+        setIsEditing(true)
+
+        return false
+      }
+    })
+
+    return response
   }
 
   const handleRemoveRecurrence = async () => {
     if (!transaction || transaction === undefined) return false
 
-    const response = await fetch(`/api/transactions/removeRecurrenceFromTransaction/${transaction.recurrenceParentId || transaction._id}`)
+    const response = await fetch(`/api/transactions/removeRecurrenceFromTransaction/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application:json',
+      },
+      body: JSON.stringify({
+        _id: transaction.parentId || transaction._id,
+      })
+    })
       .then(response => response.json())
       .then(response => {
         if (response.ok === 1) {
+          console.log(response)
           if (transaction._id !== response.value._id) handleClose()
 
           setTransaction(response.value)
@@ -349,10 +367,21 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
     //Update transaction and display/return result
     let id = transaction._id
     if (property === 'recurrenceFreq') {
-      id = transaction.recurrenceParentId || transaction._id
+      id = transaction._id
     }
 
-    const response = await fetch(`/api/transactions/updateTransaction/${id}/${property}/${encodeURIComponent(value)}/${session?.user?.currencyUsed}`)
+    const response = await fetch(`/api/transactions/updateTransaction/` , { 
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        _id: id,
+        property: property,
+        value: value,
+        currency: session?.user?.currencyUsed,
+      }),
+    })
     .then(response => response.json())
     .then(response => {
       if (response.ok === 1) {
@@ -371,15 +400,15 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
         toast.open("Transaction updated successfully!", 'success')
       } 
       else toast.open('Sorry! There was a problem updating the transaction. Please try again.', 'error')
-
-    return response
+    
+      return response
     })
 
     return response as Promise<ModifyResult<Transaction>>
   }
   
   const handleUpdateRecurringTransaction = async (
-    editType: 'single' | 'future' | 'all', 
+    editType: RecurrenceEditType, 
     newValue?: string, 
     property?: string
   ) => {
@@ -388,15 +417,15 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
 
     const monthString = toMonthString(new Date(transaction.date))
 
-    const response = await fetch(`/api/transactions/updateRecurringTransaction/`, { 
+    const response: ModifyResult<Transaction> = await fetch(`/api/transactions/updateRecurringTransaction/`, { 
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         _id: transaction._id,
+        ...!transaction.isParent && { parentId: transaction.parentId },
         editType: editType,
-        recurrenceParentId: transaction.recurrenceParentId,
         date: transaction.date,
         property: property,
         value: newValue,
@@ -404,9 +433,9 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
       })
     })
     .then(response => response.json())
-    .then(response => {
-      if (response) {
-        setTransaction(response)
+    .then((response: ModifyResult<Transaction>) => {
+      if (response.ok === 1) {
+        if (response.value) setTransaction(response.value as Transaction)
 
         mutate(`/api/transactions/getTransactions/${monthString}`)
 
@@ -420,11 +449,11 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
       }
 
       else toast.open('Sorry! There was a problem updating the transaction(s). Please try again.', 'error')
-
+    
       return response
     })
 
-    return response as Promise<ModifyResult<Transaction>>
+    return response as ModifyResult<Transaction>
   }
 
   const handleSubmit = async (
@@ -442,7 +471,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
     if (property === 'amount') value = removeCurrencyFormat(newValue).toString()
 
     //If transaction is recurring, edit recurrence
-    if (isRecurring && property !== 'freq') {
+    if (isRecurring) {
       recurEditDialog.open(transaction, value, property)
       return true
     }
@@ -458,23 +487,42 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
   }
 
   const handleDelete = async (
-    editType?: 'single' | 'future' | 'all'
+    editType?: RecurrenceEditType
     ) => {
     if (!transaction) return false
 
     const monthString = toMonthString(new Date(transaction.date))
     
-    let response
+    let response: UpdateResult | DeleteResult
     if (isRecurring) {
-      response = await fetch(`/api/transactions/deleteRecurringTransaction/${editType}/${transaction.recurrenceParentId}/${transaction.date}`)
+      response = await fetch(`/api/transactions/deleteRecurringTransaction/`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...transaction.isParent && { _id: transaction._id },
+          ...!transaction.isParent && { parentId: transaction.parentId },
+          editType: editType,
+          date: transaction.date,
+        }),
+      })
       .then(response => response.json())
     } 
     else {
-      response = await fetch(`/api/transactions/deleteTransaction/${transaction._id}`)
+      response = await fetch(`/api/transactions/deleteTransaction/`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          _id: transaction._id,
+        }),
+      })
       .then(response => response.json())
     }
     
-    if (response === true) {
+    if (response.acknowledged) {
       handleClose()
       
       mutate(`/api/transactions/getTransactions/${monthString}`)
@@ -484,7 +532,6 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
         if (response === true) mutate(`/api/months/getMonthData/${monthString}`)
         else toast.open("Sorry! There was a problem calculating the month ending amount, but the transaction was deleted. Please refresh the page.", 'error')
       })
-      
       
       toast.open("Transaction(s) deleted successfully!", 'success')
     } 
