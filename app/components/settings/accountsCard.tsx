@@ -1,4 +1,4 @@
-import { Card, CardHeader, Divider, IconButton, List, ListItemButton, ListItemIcon, Skeleton, Stack, Typography } from "@mui/material"
+import { Box, Card, CardHeader, Divider, IconButton, List, ListItemButton, ListItemIcon, Skeleton, Stack, Typography } from "@mui/material"
 import useSWR from 'swr'
 import { useEffect, useState } from "react"
 import BasicToast, { useToast } from "../ui/toasts/basicToast"
@@ -116,7 +116,10 @@ export default function AccountsCard ({}) {
 
       <List>
         {isAccountsLoading ?
+        <Box paddingX={2}>
         <Skeleton height={50} />
+          <Skeleton height={50} />
+        </Box>
         :
         accounts?.map(account => {
           return (
