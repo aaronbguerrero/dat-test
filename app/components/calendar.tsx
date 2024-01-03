@@ -15,9 +15,10 @@ import toBasicDateString from "../lib/dates/toBasicDateString"
 import AddTransactionDialog, { useAddTransactionDialog } from "./ui/dialogs/addTransactionDialog"
 import EditTransactionDialog, { useEditTransactionDialog } from "./ui/dialogs/editTransactionDialog"
 
-import type { RecurrenceEditType, Transaction } from '../types'
+import type { Account, RecurrenceEditType, Transaction } from '../types'
 import { ModifyResult } from "mongodb"
 import isDateInMonth from "../lib/dates/isDateInMonth"
+import { PaidTwoTone } from "@mui/icons-material"
 
 type Props = { 
   month: string, 
@@ -32,6 +33,10 @@ export default function Calendar ({ month, setMonth }: Props) {
   //Get Transactions
   const { data: transactions } = useSWR<Transaction[]>(`/api/transactions/getTransactions/${month}`)
   
+  //Get Account data
+  const { data: accounts } = useSWR<Account[]>(`/api/accounts/getAccounts`)
+  //TODO: Errors here for both
+
   //Get SWR mutate hook
   const { mutate } = useSWRConfig()
 
@@ -173,12 +178,17 @@ export default function Calendar ({ month, setMonth }: Props) {
     eventToRevert?.revert()
     setEventToRevert(undefined)
   }
-  
+
+  //TODO: Render recurring events on top of each day
+  //TODO: Add icon on title for recurring events and income
+
   // Event content and tooltips
   const renderEventContent = (event: EventContentArg) => {
     //TODO: Render recurring events on top of each day
 
     return (
+      // { html: `<div>${event.event._def.title}</div>`}
+    
       <Tooltip arrow placement='top'
       title={
         <Box>
@@ -188,8 +198,14 @@ export default function Calendar ({ month, setMonth }: Props) {
         </Box>
       }>
 
-        <Box sx={{ paddingX: '0.25rem' }}>
-          <Typography variant='caption'>{event.event._def.title}</Typography>
+        <Box paddingX={0.5} gap={0.5} display='flex'>
+          {/* {(event.event._def.extendedProps.amount.getAmount() >== 0) &&
+          <PaidTwoTone color='primary' fontSize='small' />} */}
+
+
+          <Typography variant='caption'>
+            {event.event._def.title}
+          </Typography>
         </Box>
       </Tooltip>
     )
@@ -203,15 +219,9 @@ export default function Calendar ({ month, setMonth }: Props) {
       const newEvents: EventInput[] = []
       
       transactions.forEach((transaction: Transaction) => {
-        if (
-          //Check for accidental null amounts
-          transaction.amount.amount ===  null || 
-          transaction.amount.currency === null //||
-          // //Ensure only transactions in the current month are displayed
-          // !isDateInMonth(transaction.date, month)
-          ) {
-            return //TODO: Better error here (toast?)
-          }
+        //Check for accidental null amounts
+        if (transaction.amount.amount ===  null || transaction.amount.currency === null) return 
+        //TODO: Better error here (toast?)
 
         //Create FullCalendar event
         const event: EventInput = {
@@ -222,9 +232,7 @@ export default function Calendar ({ month, setMonth }: Props) {
 
         event.id = transaction._id.toString()
 
-        //TODO: change event color to account color?
-        if (transaction.amount.amount > 0) event.color = theme.palette.primary.main
-        else event.color = theme.palette.tertiary.main
+        event.color = accounts?.find(account => account._id === transaction.account)?.color
 
         event.extendedProps = { 
           //TODO: Stop from crashing if amount is wrong in DB (in API?)
