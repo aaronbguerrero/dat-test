@@ -65,7 +65,17 @@ export default function AccountsCard ({}) {
   }
 
   const handleEditAccount = async (account: Account, newValue: string, property: string | undefined) => {
-    return await fetch(`/api/accounts/updateAccount/${account._id}/${property}/${encodeURIComponent(newValue)}`)
+    return await fetch(`/api/accounts/updateAccount/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        _id: account._id,
+        property: property,
+        value: newValue,
+      })
+    })
     .then(response => response.json())
     .then(response => {
       if (response.ok === 1) {
