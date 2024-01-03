@@ -35,6 +35,8 @@ export default function DeleteTransactionDialog ({
     <SubmittableDialog
     title="Are you sure you'd like to delete this transaction?"
     actionLabel="Delete"
+    actionColor='error'
+    cancelColor='secondary'
     {...dialogProps}
     >
       <Box

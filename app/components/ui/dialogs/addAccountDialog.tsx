@@ -34,7 +34,7 @@ export default function AddAccountDialog ({
     actionLabel="Submit"
     {...dialogProps}
     >
-      <Box display='flex' flexDirection='column' gap={2}>
+      <Box display='flex' flexDirection='column' gap={2} paddingTop={1}>
         <InputField 
         label="Account Name" 
         value={title} 
