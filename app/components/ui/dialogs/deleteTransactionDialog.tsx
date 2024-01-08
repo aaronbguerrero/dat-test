@@ -50,15 +50,11 @@ export default function DeleteTransactionDialog ({
           control={<Radio />} 
           />  
 
-          {
-            !transaction?.isParent && 
-
-            <FormControlLabel 
-            value='future' 
-            label="Delete this and all future occurrences of this transaction" 
-            control={<Radio />} 
-            />
-          }  
+          <FormControlLabel 
+          value='future' 
+          label="Delete this and all future occurrences of this transaction" 
+          control={<Radio />} 
+          />
 
           <FormControlLabel 
           value='all' 

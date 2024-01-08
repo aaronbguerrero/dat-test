@@ -94,18 +94,15 @@ export default async function getTransactions ( db: Db, session: Session | null,
     ruleSet.between(date, getLastDayOfMonth(date), true).map(recurDate => {
 
       //Build and add a transaction for each recurrence
-      const isParent = isSameDay(recurDate, transaction.date)
-
       const newTransaction: Transaction = {
-        _id: (isParent) ? transaction._id : new ObjectId(),
+        _id: new ObjectId(),
         title: transaction.title,
         date: recurDate,
         amount: transaction.amount,
         account: transaction.account,
         userId: new ObjectId(session?.user?.id),
         recurrenceFreq: transaction.recurrenceFreq,
-        isParent: isParent,
-        ...(!isParent) && {parentId: transaction._id}
+        parentId: transaction._id,
       }
 
       //If date is in exceptions array, then apply the exception

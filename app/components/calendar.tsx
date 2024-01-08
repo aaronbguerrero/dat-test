@@ -143,7 +143,7 @@ export default function Calendar ({ month, setMonth }: Props) {
       },
       body: JSON.stringify({
         _id: transaction?._id,
-        ...!transaction?.isParent && { parentId: transaction?.parentId },
+        parentId: transaction?.parentId,
         editType: editType,
         date: transaction?.date,
         property: property,

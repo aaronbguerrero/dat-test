@@ -43,6 +43,5 @@ export interface Transaction {
   amount: { amount: number, currency: Dinero.Currency },
   recurrenceFreq?: string,
   recurrenceExceptions?: RecurrenceException[],
-  isParent?: boolean,
   parentId?: ObjectId,
 }

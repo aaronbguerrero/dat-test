@@ -22,7 +22,6 @@ export async function PATCH(request: NextRequest) {
   } = await request.json()
   
   let value: string | Date | { amount: number, currency: Dinero.Currency } = body.value
-  const id: ObjectId = new ObjectId(body.parentId || body._id)
   const date =  new Date(body.date)
 
   switch (body.property) {
@@ -43,6 +42,8 @@ export async function PATCH(request: NextRequest) {
   const db = client.db("userData")
 
   if (body.editType === 'single') {
+    const id: ObjectId = new ObjectId(body.parentId || body._id)
+
     //Create exception in parent transaction
     const response = await db.collection<Transaction>("transactions").findOneAndUpdate(
       { _id: id },
@@ -69,7 +70,9 @@ export async function PATCH(request: NextRequest) {
     else return NextResponse.json({ status: 500 })
   }
   
-  else if (body.editType === 'future') {    
+  else if (body.editType === 'future') {  
+    const id: ObjectId = new ObjectId(body.parentId || body._id)
+
     //Update end date in parent transaction, create new recurring transaction in it's place
     //Get recurrence rules from parent
     const parent = await db.collection<Transaction>("transactions").findOne({ _id: id })
@@ -111,6 +114,8 @@ export async function PATCH(request: NextRequest) {
   }
   
   else if (body.editType === 'all') {
+    const id: ObjectId = new ObjectId(body.parentId || body._id)
+    
     const response = await db.collection<Transaction>("transactions").findOneAndUpdate(
       { _id: id },
       { $set: {[body.property]: value}},

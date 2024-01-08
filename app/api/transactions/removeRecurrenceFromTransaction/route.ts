@@ -18,7 +18,7 @@ export async function PATCH(request: NextRequest) {
     { _id: id },
     {$unset: {
       recurrenceFreq: "",
-      recurrenceExclusions: ""
+      recurrenceExceptions: ""
     }},
     { returnDocument: 'after' },
   )

@@ -14,13 +14,14 @@ export async function DELETE(request: NextRequest) {
     date: Date,
   } = await request.json()
 
-  const id: ObjectId = new ObjectId(body._id || body.parentId)
   const date =  new Date(body.date)
   
   const client = await clientPromise
   const db = client.db("userData")
 
   if (body.editType === 'single') {
+    const id: ObjectId = new ObjectId(body._id || body.parentId)
+
     //Create exclusion in parent transaction
     const response = await db.collection("transactions").updateOne(
       { _id: id },
@@ -34,7 +35,10 @@ export async function DELETE(request: NextRequest) {
     else return NextResponse.json({ status: 500 })
   }
   
-  else if (body.editType === 'future') {
+  else if (body.editType === 'future') { 
+    //TODO NEED TO CHECK IF THIS ORDER IS CORRET (or needed)
+    const id: ObjectId = new ObjectId(body._id || body.parentId)
+
     //Update end date in parent transaction
     //Get recurrence rules from parent
     const parent = await db.collection("transactions").findOne({ _id: id })
@@ -73,7 +77,13 @@ export async function DELETE(request: NextRequest) {
   }
   
   else if (body.editType === 'all') {
-    const response = await db.collection("transactions").deleteOne({ "_id": id })
+    const id: ObjectId = new ObjectId(body.parentId || body._id)
+
+    const response = await db.collection("transactions").deleteOne({ 
+      "_id": new ObjectId(body.parentId || body._id) 
+    })
+    //.then()
+    //TODO: delete all that have the parent id of the parent
     
     if (response.deletedCount === 1) return NextResponse.json(response)
     else return NextResponse.json({ status: 500 })
