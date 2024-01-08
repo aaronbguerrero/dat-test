@@ -33,30 +33,17 @@ export default function RecurEditDialog ({
     setEditType(event.target.value as RecurrenceEditType)
   }
 
-//TODO: if editing recurrence, only allow editing all
-
   return (
     <SubmittableDialog
     {...dialogProps}
     >
       {
-        ((transaction?.isParent) || 
-        (property === 'date') || 
-        (property === 'recurrenceFreq')) &&
+        ((property === 'date') || (property === 'recurrenceFreq')) &&
 
         <Box display='flex' flexDirection='column' alignItems='center' textAlign='center' gap={4}>
           <WarningTwoTone color='warning' style={{ fontSize: '5rem'}} />
-
           {
-            transaction?.isParent &&
-
-            <Typography variant='h5'>
-              Since this is the parent of a recurring series, this edit will apply to all of the following transactions in the series.
-            </Typography>
-          }
-
-          {
-            ((!transaction?.isParent) && (property == 'date')) &&
+            (property == 'date') &&
 
             <Typography variant='h5'>
               Since the date is being changed, this edit will only apply to this occurrence of the transaction.
@@ -64,7 +51,7 @@ export default function RecurEditDialog ({
           }
 
           {
-            ((!transaction?.isParent) && (property == 'recurrenceFreq')) &&
+            (property == 'recurrenceFreq') &&
 
             <Typography variant='h5'>
               Since the recurrence rules are being changed, this edit will apply all of the transactions in the series.
@@ -74,9 +61,7 @@ export default function RecurEditDialog ({
       }
 
       {
-        ((!transaction?.isParent) && 
-        (property !== 'date') &&
-        (property !== 'recurrenceFreq')) && 
+        ((property !== 'date') && (property !== 'recurrenceFreq')) && 
 
         <Box 
         component='form' 
@@ -135,7 +120,7 @@ export function useRecurEditDialog (
   ) => {
     if (transaction) setTransaction(transaction)
 
-    if (transaction?.isParent || (property === 'recurrenceFreq')) setEditType('all')
+    if (property === 'recurrenceFreq') setEditType('all')
 
     setValue(newValue || '')
     setProperty(property || 'date')

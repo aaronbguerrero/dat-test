@@ -89,23 +89,13 @@ export default function EditTransactionDialog ({
 
           {(
             isRecurring && 
-            <Tooltip title={`This transaction is ${transaction.isParent ? "the parent" : "part"} of a recurring series`}>
+            <Tooltip title={`This transaction is part of a recurring series`}>
               <Box display='flex' alignItems='center'>
                 <EventRepeatTwoTone 
                 fontSize='small' 
                 color='info' 
                 sx={{ marginLeft: '1rem' }} 
                 />
-
-                {
-                  transaction.isParent &&
-
-                  <StarTwoTone 
-                  fontSize='small' 
-                  color='info' 
-                  sx={{ marginLeft: '1rem' }} 
-                  />
-                }
               </Box>
             </Tooltip>
           )}
@@ -323,7 +313,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
         'Content-Type': 'application:json',
       },
       body: JSON.stringify({
-        _id: transaction.parentId || transaction._id,
+        _id: transaction.parentId,
       })
     })
       .then(response => response.json())
@@ -424,7 +414,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
       },
       body: JSON.stringify({
         _id: transaction._id,
-        ...!transaction.isParent && { parentId: transaction.parentId },
+        parentId: transaction.parentId,
         editType: editType,
         date: transaction.date,
         property: property,
@@ -501,8 +491,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...transaction.isParent && { _id: transaction._id },
-          ...!transaction.isParent && { parentId: transaction.parentId },
+          parentId: transaction.parentId,
           editType: editType,
           date: transaction.date,
         }),
