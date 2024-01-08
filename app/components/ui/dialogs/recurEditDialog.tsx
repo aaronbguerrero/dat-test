@@ -92,11 +92,12 @@ export default function RecurEditDialog ({
             control={<Radio />} 
             />  
             
+{/* TODO: Reimplement
             <FormControlLabel 
             value='future' 
             label="Edit this and all future occurrences of this transaction" 
             control={<Radio />} 
-            />  
+            />   */}
 
             <FormControlLabel 
             value='all' 
