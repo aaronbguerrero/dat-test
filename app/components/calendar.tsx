@@ -5,7 +5,7 @@ import daygrid from "@fullcalendar/daygrid"
 import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction"
 import { EventClickArg, EventInput, EventChangeArg, EventContentArg, CalendarApi } from "@fullcalendar/core"
 import { useTheme } from "@mui/material/styles"
-import { Box, CircularProgress, Paper, Tooltip, Typography } from "@mui/material"
+import { Box, CircularProgress, Paper, Skeleton, Tooltip, Typography } from "@mui/material"
 import Dinero from 'dinero.js'
 import RecurEditDialog, { useRecurEditDialog } from "./ui/dialogs/recurEditDialog"
 import BasicToast, { useToast } from "./ui/toasts/basicToast"
@@ -19,6 +19,7 @@ import type { Account, RecurrenceEditType, Transaction } from '../types'
 import { ModifyResult } from "mongodb"
 import isDateInMonth from "../lib/dates/isDateInMonth"
 import { PaidTwoTone } from "@mui/icons-material"
+import getDaysInMonth from "../lib/dates/getDaysInMonth"
 
 type Props = { 
   month: string, 
@@ -31,6 +32,7 @@ export default function Calendar ({ month, setMonth }: Props) {
   const toast = useToast()
 
   const [isCalendarLoading, setIsCalendarLoading] = useState(true)
+  const [isTransactionsLoading, setIsTransactionsLoading] = useState(true)
   
   //Get Transactions
   const { data: transactions } = useSWR<Transaction[]>(`/api/transactions/getTransactions/${month}`)
@@ -59,8 +61,23 @@ export default function Calendar ({ month, setMonth }: Props) {
       })
     }
   }, [calendarApi, month])
-  
-  const [events, setEvents] = useState<EventInput[]>([])
+  console.log(month)
+  //Setup events state with blank events as initial data
+  const daysArray = new Array(getDaysInMonth(month)).fill({})
+  const loadingSkeletons = daysArray.map((event, day) => {
+    const newEvent: EventInput = {
+        title: '',
+        date: new Date(month).setUTCDate(day + 1),
+        allDay: true,
+        id: day.toString(),
+        color: 'rgba(0,0,0,0)',
+        extendedProps: {
+          isLoading: true,
+        }
+      }
+      return newEvent
+    })
+  const [events, setEvents] = useState<EventInput[]>(loadingSkeletons)
   const [eventToRevert, setEventToRevert] = useState<EventChangeArg>()
    
   //Click event handlers
@@ -186,6 +203,12 @@ export default function Calendar ({ month, setMonth }: Props) {
 
   // Event content and tooltips
   const renderEventContent = (event: EventContentArg) => {
+    if (event.event._def.extendedProps.isLoading) return (
+        <Skeleton 
+        animation='wave'
+        height="1.5rem"
+        />
+    )
     //TODO: Render recurring events on top of each day
 
     return (
@@ -218,7 +241,8 @@ export default function Calendar ({ month, setMonth }: Props) {
   //Mutate Transactions to FullCalendar events
   useEffect(() => {
     if (transactions) {
-      console.log('YESSSSS TRaNSESSSSSSS!')
+      setIsTransactionsLoading(false)
+
       const newEvents: EventInput[] = []
       
       transactions.forEach((transaction: Transaction) => {
@@ -256,7 +280,7 @@ export default function Calendar ({ month, setMonth }: Props) {
       setEvents(newEvents)
     }
 
-    else console.log('NO TRaNSESSSSSSS!')
+    else setIsTransactionsLoading(true)
   }, [transactions, theme])
   
   return (
