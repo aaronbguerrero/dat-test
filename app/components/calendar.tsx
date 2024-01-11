@@ -5,7 +5,7 @@ import daygrid from "@fullcalendar/daygrid"
 import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction"
 import { EventClickArg, EventInput, EventChangeArg, EventContentArg, CalendarApi } from "@fullcalendar/core"
 import { useTheme } from "@mui/material/styles"
-import { Box, Paper, Tooltip, Typography } from "@mui/material"
+import { Box, CircularProgress, Paper, Tooltip, Typography } from "@mui/material"
 import Dinero from 'dinero.js'
 import RecurEditDialog, { useRecurEditDialog } from "./ui/dialogs/recurEditDialog"
 import BasicToast, { useToast } from "./ui/toasts/basicToast"
@@ -29,6 +29,8 @@ export default function Calendar ({ month, setMonth }: Props) {
   const theme = useTheme()
 
   const toast = useToast()
+  
+  const [isCalendarLoading, setIsCalendarLoading] = useState(true)
   
   //Get Transactions
   const { data: transactions } = useSWR<Transaction[]>(`/api/transactions/getTransactions/${month}`)
@@ -256,6 +258,27 @@ export default function Calendar ({ month, setMonth }: Props) {
   
   return (
     <Paper sx={{ height: '100%' }}>
+
+      {
+        isCalendarLoading && 
+        
+        <Box 
+        display='flex' 
+        alignItems='center' 
+        justifyContent='center' 
+        height='100%'
+        >
+          <CircularProgress 
+          size={'10%'} 
+          color='info' 
+          thickness={2}
+          />
+        </Box>
+      }
+
+      {
+        !isCalendarLoading &&
+
       <Box 
       display='flex' 
       justifyContent='space-between' 
@@ -272,6 +295,8 @@ export default function Calendar ({ month, setMonth }: Props) {
 
         <MonthSelector month={month} setMonth={setMonth} />
       </Box>
+      }
+      
 
       <FullCalendar 
       dateClick={handleDateClick}
@@ -293,6 +318,7 @@ export default function Calendar ({ month, setMonth }: Props) {
       ref={calendarRef}
       showNonCurrentDates={true}
       timeZone='UTC'
+      loading={(isLoading: boolean) => setIsCalendarLoading(isLoading)}
       />
 
       <AddTransactionDialog {...addTransactionDialog} />
