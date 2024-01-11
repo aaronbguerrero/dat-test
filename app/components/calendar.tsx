@@ -29,7 +29,7 @@ export default function Calendar ({ month, setMonth }: Props) {
   const theme = useTheme()
 
   const toast = useToast()
-  
+
   const [isCalendarLoading, setIsCalendarLoading] = useState(true)
   
   //Get Transactions
@@ -218,6 +218,7 @@ export default function Calendar ({ month, setMonth }: Props) {
   //Mutate Transactions to FullCalendar events
   useEffect(() => {
     if (transactions) {
+      console.log('YESSSSS TRaNSESSSSSSS!')
       const newEvents: EventInput[] = []
       
       transactions.forEach((transaction: Transaction) => {
@@ -254,6 +255,8 @@ export default function Calendar ({ month, setMonth }: Props) {
       //Push events to calendar
       setEvents(newEvents)
     }
+
+    else console.log('NO TRaNSESSSSSSS!')
   }, [transactions, theme])
   
   return (
@@ -279,22 +282,22 @@ export default function Calendar ({ month, setMonth }: Props) {
       {
         !isCalendarLoading &&
 
-      <Box 
-      display='flex' 
-      justifyContent='space-between' 
-      alignItems='center' 
-      padding='1rem'
-      gap={{ xs: 2, lg: 0 }}
-      >
-        <Typography 
-        color='secondary' 
-        variant='h5'
+        <Box 
+        display='flex' 
+        justifyContent='space-between' 
+        alignItems='center' 
+        padding='1rem'
+        gap={{ xs: 2, lg: 0 }}
         >
-          {calendarApi && toPrettyMonthString(calendarApi?.getDate())}
-        </Typography>
+          <Typography 
+          color='secondary' 
+          variant='h5'
+          >
+            {calendarApi && toPrettyMonthString(calendarApi?.getDate())}
+          </Typography>
 
-        <MonthSelector month={month} setMonth={setMonth} />
-      </Box>
+          <MonthSelector month={month} setMonth={setMonth} />
+        </Box>
       }
       
 
