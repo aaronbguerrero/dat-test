@@ -1,8 +1,8 @@
-import { Box, Card, CardHeader, Divider, IconButton, List, ListItemButton, ListItemIcon, Skeleton, Stack, Typography } from "@mui/material"
+import { Box, Card, CardHeader, Divider, IconButton, List, ListItemButton, ListItemIcon, Skeleton, Stack, Tooltip, Typography } from "@mui/material"
 import useSWR from 'swr'
 import { useEffect, useState } from "react"
 import BasicToast, { useToast } from "../ui/toasts/basicToast"
-import { Add } from "@mui/icons-material"
+import { Add, StarTwoTone } from "@mui/icons-material"
 import AddAccountDialog, { useAddAccountDialog } from "../ui/dialogs/addAccountDialog"
 import EditAccountDialog, { useEditAccountDialog } from "../ui/dialogs/editAccountDialog"
 import AccountIcon from "../ui/accountIcon"
@@ -64,7 +64,7 @@ export default function AccountsCard ({}) {
     editAccountDialog.open(account)
   }
 
-  const handleEditAccount = async (account: Account, newValue: string, property: string | undefined) => {
+  const handleEditAccount = async (account: Account, newValue: string, property: string | undefined) => {   
     return await fetch(`/api/accounts/updateAccount/`, {
       method: 'PATCH',
       headers: {
@@ -86,6 +86,33 @@ export default function AccountsCard ({}) {
       else toast.open("Sorry! There was a problem editing the account, please try again.", 'error')
       
       return response as Promise<ModifyResult<Account>>
+    })
+  }
+
+  const handleSetDefaultAccount = async (account: Account) => {
+    return await fetch(`/api/accounts/setDefaultAccount`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        _id: account._id,
+      })
+    })
+    .then(response => response.json())
+    .then(response => {
+      if (response.ok === 1) {
+        mutate()
+
+        toast.open("The default account was changed!", 'success')
+
+        return response
+      }
+      else {
+        toast.open("There was a problem changing the default account, please try again.", 'error')
+        return response
+      }
     })
   }
   
@@ -112,7 +139,7 @@ export default function AccountsCard ({}) {
     })
   }
 
-  const editAccountDialog = useEditAccountDialog(handleEditAccount, handleDeleteAccount)
+  const editAccountDialog = useEditAccountDialog(handleEditAccount, handleSetDefaultAccount, handleDeleteAccount)
 
   return (
     <Card
@@ -145,11 +172,21 @@ export default function AccountsCard ({}) {
             key={account._id.toString()}
             onClick={() => handleEditAccountClick(account)}
             >
-              <ListItemIcon sx={{ color: account.color }}>
-                <AccountIcon type={account.type} />
-              </ListItemIcon>
+              <Box display='flex' width='100%' justifyContent='space-between'>
+                <ListItemIcon sx={{ color: account.color }}>
+                  <AccountIcon type={account.type} />
+                </ListItemIcon>
 
-              <Typography>{account.title}</Typography>
+                <Typography>{account.title}</Typography>
+
+                <Tooltip title="This is the default account">
+                  <StarTwoTone 
+                  sx={{ visibility: !account.isDefault && 'hidden' || 'visible' }}
+                  color={'warning'}
+                  />
+                </Tooltip>
+                
+              </Box>
             </ListItemButton>
           )
         })}

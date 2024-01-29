@@ -35,7 +35,8 @@ export default function Chart ({ month }: { month: string }) {
   
   return (
     <Paper sx={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden', }}>
-      <AccountsButtons onChange={handleAccountsChange} orientation='vertical' />
+      {/* TODO: User set if exclusive */}
+      <AccountsButtons onChange={handleAccountsChange} orientation='vertical' exclusive />
 
       <Box sx={{ minHeight: '15rem', height: '99%', width: '99%', position: 'relative', overflow: 'hidden' }}>
         <Line 

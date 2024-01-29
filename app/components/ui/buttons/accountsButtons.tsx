@@ -26,8 +26,11 @@ export default function AccountsButtons ({ onChange, exclusive, orientation }: P
   const [activeAccounts, setActiveAccounts] = useState<string[]>([])
   useEffect(() => {
     if (accounts !== undefined) {
-      //TODO: User set default account
-      if (exclusive) setActiveAccounts([accounts[0]._id.toString()])
+      //User set default account. If it doesn't exist it will default to the first account in the array.
+      if (exclusive) {
+        const defaultAccount = accounts.find(account => account.isDefault)?._id.toString() || accounts[0]._id.toString()
+        setActiveAccounts([defaultAccount])
+      }
       else setActiveAccounts(accounts.map(account => {
         return account._id.toString()
       }))
@@ -35,7 +38,7 @@ export default function AccountsButtons ({ onChange, exclusive, orientation }: P
   }, [accounts, exclusive])
   
   const handleAccountsChange = (event: React.MouseEvent<HTMLElement>, newAccounts: string[]) => {
-    setActiveAccounts(newAccounts)
+    if (newAccounts) setActiveAccounts(newAccounts)
   }
   
   useEffect(() => {
