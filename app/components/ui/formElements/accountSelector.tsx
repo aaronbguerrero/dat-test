@@ -29,7 +29,7 @@ export default function AccountSelector ({ value, onChange, disabled, required }
     <>
       <InputField 
         name='account'
-        value={value}
+        value={value || accounts?.find(account => account.isDefault)?._id.toString()}
         fullWidth 
         select 
         label='Account'

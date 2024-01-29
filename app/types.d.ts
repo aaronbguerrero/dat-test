@@ -30,6 +30,7 @@ export interface Account {
   title: string,
   type: AccountType,
   color: string,
+  isDefault?: boolean,
 }
 
 export type TransactionProperty = 'title' | 'date' | 'amount' | 'account' | 'recurrenceFreq'

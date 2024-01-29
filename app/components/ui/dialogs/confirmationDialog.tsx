@@ -1,17 +1,19 @@
 import { ChangeEvent, useState } from "react"
 import SubmittableDialog, { SubmittableDialogProps, useSubmittableDialog } from "./submittableDialog"
 
-interface ConfirmationDialogProps { 
+export type ConfirmationDialogProps = { 
   dialogProps: SubmittableDialogProps,
-  title: string,
+  title?: string,
+  body?: string,
   confirmLabel?: string,
   cancelLabel?: string,
-  open: (title: string) => void,
+  open: (title: string, body?: string) => void,
 }
 
 export default function ConfirmationDialog ({ 
   dialogProps,
   title,
+  body,
   confirmLabel,
   cancelLabel
 }: ConfirmationDialogProps) {
@@ -23,16 +25,18 @@ export default function ConfirmationDialog ({
     cancelLabel={cancelLabel}
     {...dialogProps}
     >
-      
+      {body}
     </SubmittableDialog>
   )
 }
 
 export function useConfirmationDialog (onConfirm: () => Promise<boolean>, onCancel?: () => Promise<boolean>) {
   const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
 
-  const handleOpen = (title: string) => {
+  const handleOpen = (title: string, body?: string) => {
     setTitle(title)
+    setBody(body || '')
     dialogHook.open()
   }
 
@@ -54,6 +58,7 @@ export function useConfirmationDialog (onConfirm: () => Promise<boolean>, onCanc
   const dialogProps: ConfirmationDialogProps = {
     dialogProps: dialogHook,
     title: title,
+    body: body,
     open: handleOpen,
   } 
 
