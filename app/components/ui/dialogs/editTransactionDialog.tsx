@@ -319,7 +319,6 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
       .then(response => response.json())
       .then(response => {
         if (response.ok === 1) {
-          console.log(response)
           if (transaction._id !== response.value._id) handleClose()
 
           setTransaction(response.value)
@@ -400,7 +399,8 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
   const handleUpdateRecurringTransaction = async (
     editType: RecurrenceEditType, 
     newValue?: string, 
-    property?: string
+    property?: string,
+    transaction?: Transaction,
   ) => {
     //Check to make sure payload is there
     if (!newValue || !property || !transaction) return {} as ModifyResult<Transaction>
@@ -483,7 +483,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
 
     const monthString = toMonthString(new Date(transaction.date))
     
-    let response: UpdateResult | DeleteResult
+    let response: DeleteResult
     if (isRecurring) {
       response = await fetch(`/api/transactions/deleteRecurringTransaction/`, {
         method: 'DELETE',

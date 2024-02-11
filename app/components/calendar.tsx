@@ -61,7 +61,7 @@ export default function Calendar ({ month, setMonth }: Props) {
       })
     }
   }, [calendarApi, month])
-  console.log(month)
+
   //Setup events state with blank events as initial data
   const daysArray = new Array(getDaysInMonth(month)).fill({})
   const loadingSkeletons = daysArray.map((event, day) => {
@@ -130,7 +130,6 @@ export default function Calendar ({ month, setMonth }: Props) {
     })
     .then(response => response.json())
     .then(response => {
-      console.log(response)
       if (response.ok === 1) {
         mutate(`/api/transactions/getTransactions/${month}`)
         //TODO: Update month ending amount (should rethink this piece)
