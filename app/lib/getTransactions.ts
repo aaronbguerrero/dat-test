@@ -83,7 +83,7 @@ export default async function getTransactions ( db: Db, session: Session | null,
       //Filter date exceptions and add them to dateExceptions array, exclude original dates
       if (exception.date) {
         dateExceptions.push(exception.date)
-        if (!isSameDay(exception.date, exception.originalDate)) ruleSet.exdate(exception.originalDate as Date)
+        ruleSet.exdate(new Date(exception.originalDate))
 
         return true
       }
