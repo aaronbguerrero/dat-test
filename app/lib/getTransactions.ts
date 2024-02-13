@@ -6,6 +6,8 @@ import getLastDayOfMonth from "./dates/getLastDayOfMonth"
 import type { RecurrenceExceptionProperty, Transaction, TransactionProperty } from '../types'
 import type { Session } from "next-auth"
 import { isSameDay } from "./dates/isSameDay"
+import isDateInMonth from "./dates/isDateInMonth"
+import toMonthString from "./dates/toMonthString"
 
 export default async function getTransactions ( db: Db, session: Session | null, date: Date) {
   const month = date.getUTCMonth() + 1
@@ -123,5 +125,9 @@ export default async function getTransactions ( db: Db, session: Session | null,
     })
   })
 
-  return transactions
+  const transactionsInMonth = transactions.filter(transaction => {
+    if (isDateInMonth(transaction.date, toMonthString(date))) return transaction
+  })
+
+  return transactionsInMonth
 }
