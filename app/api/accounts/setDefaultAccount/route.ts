@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server"
 import clientPromise from "../../../lib/database"
 
 import type { Account } from "../../../types"
-import { AuthOptions } from "../../auth/[...nextauth]/route"
+import { AuthOptions } from '../../../lib/authOptions'
 
 //Set default financial account
 export async function PATCH(request: NextRequest) {

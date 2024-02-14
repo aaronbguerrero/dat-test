@@ -6,7 +6,7 @@ import { RRule } from "rrule"
 import type { RecurrenceEditType, RecurrenceException, Transaction } from '../../../types'
 import addException from "../../../lib/addException"
 import { getServerSession } from "next-auth"
-import { AuthOptions } from "../../auth/[...nextauth]/route"
+import { AuthOptions } from '../../../lib/authOptions'
 
 //Delete Recurring Transaction
 export async function DELETE(request: NextRequest) {

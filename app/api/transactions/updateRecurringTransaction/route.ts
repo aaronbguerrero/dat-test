@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth"
 import { NextRequest, NextResponse } from "next/server"
 import { RRule } from "rrule"
 import clientPromise from "../../../lib/database"
-import { AuthOptions } from "../../auth/[...nextauth]/route"
+import { AuthOptions } from '../../../lib/authOptions'
 
 import type { RecurrenceEditType, RecurrenceException, RecurrenceExceptionProperty, Transaction, TransactionProperty } from '../../../types'
 import addException from "../../../lib/addException"
