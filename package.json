@@ -40,7 +40,7 @@
     "@simbathesailor/use-what-changed": "^2.0.0",
     "@types/dinero.js": "^1.9.4",
     "@types/next": "^9.0.0",
-    "@types/react": "18.2.14",
+    "@types/react": "^18.2.55",
     "nodemailer": "^6.9.9"
   }
 }
