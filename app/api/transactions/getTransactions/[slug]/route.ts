@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth/next'
 import { NextRequest, NextResponse } from "next/server"
 import clientPromise from "../../../../lib/database"
-import { AuthOptions } from '../../../auth/[...nextauth]/route'
+import { AuthOptions } from '../../../../lib/authOptions'
 import getTransactions from '../../../../lib/getTransactions'
 
 //Get Transactions. Slug: month

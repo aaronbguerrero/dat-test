@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
-import { AuthOptions } from "../../../auth/[...nextauth]/route"
+import { AuthOptions } from '../../../../lib/authOptions'
 import clientPromise from "../../../../lib/database"
 import { ObjectId } from "mongodb"
 import getPreviousMonth from "../../../../lib/dates/getPreviousMonth"

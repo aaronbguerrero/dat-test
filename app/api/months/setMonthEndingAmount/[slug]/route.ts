@@ -3,7 +3,7 @@ import clientPromise from "../../../../lib/database"
 import { ObjectId } from "mongodb"
 import Dinero from 'dinero.js'
 import { getServerSession } from "next-auth/next"
-import { AuthOptions } from "../../../auth/[...nextauth]/route"
+import { AuthOptions } from '../../../../lib/authOptions'
 import getTransactions from "../../../../lib/getTransactions"
 
 import type { MonthData } from "../../getMonthData/[slug]/route"

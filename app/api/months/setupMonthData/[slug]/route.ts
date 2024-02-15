@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import toMonthString from "../../../../lib/dates/toMonthString"
 import { getServerSession } from "next-auth/next"
-import { AuthOptions } from "../../../auth/[...nextauth]/route"
+import { AuthOptions } from '../../../../lib/authOptions'
 import { headers } from 'next/headers'
 import clientPromise from "../../../../lib/database"
 import { ObjectId } from "mongodb" 
