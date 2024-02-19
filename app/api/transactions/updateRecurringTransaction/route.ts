@@ -7,6 +7,7 @@ import { AuthOptions } from '../../../lib/authOptions'
 
 import type { RecurrenceEditType, RecurrenceException, RecurrenceExceptionProperty, Transaction, TransactionProperty } from '../../../types'
 import addException from "../../../lib/addException"
+import { isSameDay } from "../../../lib/dates/isSameDay"
 
 //Update Recurring Transaction 
 
@@ -171,7 +172,9 @@ export async function PATCH(request: NextRequest) {
       const newRule = new RRule(newRuleOptions)
       const newProperties = {
         [body.property]: value,
-        date: date,
+        date: newExceptions.find(exception => {
+          if (isSameDay(exception.date, date)) return exception
+        })?.originalDate || date,
         recurrenceFreq: newRule.toString(),
         recurrenceExceptions: newExceptions || [],
       }
