@@ -150,7 +150,7 @@ export async function PATCH(request: NextRequest) {
         } 
         else {
           if (exception.originalDate >= date) {
-            //Add exclusion in future
+            //Add exception in future
             newExceptions.push({
               originalDate: exception.originalDate,
               date: exception.originalDate,
