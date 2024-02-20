@@ -50,40 +50,7 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
 
     const transactions = await getTransactions(db, session, date)
 
-    //Calculate month data
-    const { dailyBalance, income, expenses, endingAmount } = calculateMonthData(transactions, monthData)
-
-    //If there is no change, return true
-    if (
-      monthData.dailyBalance &&
-      dailyBalance.map((dailyAmount, index) => {
-        if (dailyAmount.getAmount() === monthData.dailyBalance[index]?.amount) return true
-        else return false
-      }) &&
-      income.getAmount() === monthData.totalIncome?.amount &&
-      expenses.getAmount() === monthData.totalExpenses?.amount &&
-      endingAmount.getAmount() === monthData.endingAmount?.amount
-      ) return NextResponse.json(true)
-
-    //Otherwise update the month's data
-    const response = await db.collection("months").updateOne(
-      { _id: monthData._id },
-      { $set: {
-        dailyBalance: dailyBalance.map(dailyAmount => {
-          return {
-             amount: dailyAmount.getAmount(),
-             currency: dailyAmount.getCurrency(),
-            }
-        }),
-        totalIncome: { amount: income.getAmount(), currency: session.user.currencyUsed },
-        totalExpenses: { amount: expenses.getAmount(), currency: session.user.currencyUsed },
-        endingAmount: { amount: endingAmount.getAmount(), currency: session.user.currencyUsed },
-      }}
-    )
-
-    if (response.modifiedCount === 1) return NextResponse.json(true)
-    else return NextResponse.json(false)
+    //Calculate and return month data
+    return calculateMonthData(transactions, monthData, db, session.user.currencyUsed || 'USD')
   }
-
-  return NextResponse.json(false)
 }
