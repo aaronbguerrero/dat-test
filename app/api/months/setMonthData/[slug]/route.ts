@@ -9,11 +9,13 @@ import getTransactions from "../../../../lib/getTransactions"
 import type { MonthData } from "../../getMonthData/[slug]/route"
 import type { Transaction } from "../../../../types"
 
-//Set month ending amount
+//Set month data
 //1. Get data
   // Transactions and Starting Amount
-//2. Calculate ending amount
-//3. Set ending amount if different that what's stored
+//2. Calculate data:
+  //-ending amount
+  
+//3. Set data if different that what's stored
 
 export async function GET(request: NextRequest, { params }: { params: { slug: string }}) {
   const session = await getServerSession(AuthOptions)

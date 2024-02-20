@@ -8,7 +8,7 @@ import BaseDialog, { BaseDialogProps, useDialog } from './baseDialog'
 import { DeleteTwoTone, EventRepeatTwoTone, LoopTwoTone, StarTwoTone } from '@mui/icons-material'
 import ExpenseIncomeButtons from '../buttons/expenseIncomeButtons'
 import toMonthString from '../../../lib/dates/toMonthString'
-import updateMonthEndingAmount from '../../../lib/updateMonthEndingAmount'
+import updateMonthData from '../../../lib/updateMonthData'
 import DeleteTransactionDialog, { DeleteTransactionDialogProps, useDeleteTransactionDialog } from './deleteTransactionDialog'
 import BasicToast, { BasicToastProps, useToast } from '../toasts/basicToast'
 import RecurEditDialog, { RecurEditDialogProps, useRecurEditDialog } from './recurEditDialog'
@@ -380,7 +380,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
 
         mutate(`/api/transactions/getTransactions/${toMonthString(new Date(transaction.date))}`)
 
-        updateMonthEndingAmount(monthString)
+        updateMonthData(monthString)
         .then(response => {
           if (response === true) mutate(`/api/months/getMonthData/${monthString}`)
           else toast.open("Sorry! There was a problem calculating the month ending amount, but the transaction was updated. Please refresh the page.", 'error')
@@ -429,7 +429,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
 
         mutate(`/api/transactions/getTransactions/${monthString}`)
 
-        updateMonthEndingAmount(monthString)
+        updateMonthData(monthString)
         .then(response => {
           if (response === true) mutate(`/api/months/getMonthData/${monthString}`)
           else toast.open("Sorry! There was a problem calculating the month ending amount, but the transaction was updated. Please refresh the page.", 'error')
@@ -516,7 +516,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
       
       mutate(`/api/transactions/getTransactions/${monthString}`)
       
-      updateMonthEndingAmount(monthString)
+      updateMonthData(monthString)
       .then(response => {
         if (response === true) mutate(`/api/months/getMonthData/${monthString}`)
         else toast.open("Sorry! There was a problem calculating the month ending amount, but the transaction was deleted. Please refresh the page.", 'error')

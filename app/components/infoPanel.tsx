@@ -12,7 +12,7 @@ import type { MonthData } from "../api/months/getMonthData/[slug]/route"
 import getCurrentMonth from "../lib/dates/getCurrentMonth"
 import toMonthString from "../lib/dates/toMonthString"
 import removeCurrencyFormat from "../lib/removeCurrencyFormat"
-import updateMonthEndingAmount from "../lib/updateMonthEndingAmount"
+import updateMonthData from "../lib/updateMonthData"
 import currencySchema from "../schemas/currencySchema"
 import EditableInputField from "./ui/formElements/editableInputField"
 import BasicToast, { useToast } from "./ui/toasts/basicToast"
@@ -76,7 +76,7 @@ export default function InfoPanel ({ month }: Props) {
         .then(response => response.json())
         .then(response => {
           if (response === true) {
-            updateMonthEndingAmount(monthData.month || "")
+            updateMonthData(monthData.month || "")
             .then(response => {
               if (response === true) toast.open("Starting amount updated successfully!", 'success')
               else toast.open("Sorry! There was a problem updating the ending amount. Please refresh the page.", 'error')

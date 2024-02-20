@@ -19,7 +19,7 @@ import { Currency } from 'dinero.js'
 import { useSession } from 'next-auth/react'
 import ExpenseIncomeButtons from '../buttons/expenseIncomeButtons'
 import toMonthString from '../../../lib/dates/toMonthString'
-import updateMonthEndingAmount from '../../../lib/updateMonthEndingAmount'
+import updateMonthData from '../../../lib/updateMonthData'
 import RecurrenceSelector from '../formElements/recurrenceSelector'
 import BasicToast, { useToast } from '../toasts/basicToast'
 import InputField from '../formElements/inputField'
@@ -117,7 +117,7 @@ export default function AddTransactionDialog ({
       if (response.acknowledged) {
         mutate(`/api/transactions/getTransactions/${toMonthString(date)}`)
 
-        updateMonthEndingAmount(toMonthString(date))
+        updateMonthData(toMonthString(date))
         .then(response => {
           if (response === true) {
             mutate(`/api/months/getMonthData/${toMonthString(date)}`)
