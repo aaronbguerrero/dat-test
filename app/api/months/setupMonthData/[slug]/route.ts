@@ -2,16 +2,16 @@ import { NextRequest, NextResponse } from "next/server"
 import toMonthString from "../../../../lib/dates/toMonthString"
 import { getServerSession } from "next-auth/next"
 import { AuthOptions } from '../../../../lib/authOptions'
-import { headers } from 'next/headers'
 import clientPromise from "../../../../lib/database"
 import { ObjectId } from "mongodb" 
-import Dinero from 'dinero.js'
 
 import getPreviousMonth from "../../../../lib/dates/getPreviousMonth"
 import getTransactions from "../../../../lib/getTransactions"
 
 import type { MonthData } from "../../../../types"
 import type { Transaction } from '../../../../types'
+import generateDailyCashPosition from "../../../../lib/generateDailyCashPosition"
+import calculateMonthData from "../../../../lib/calcMonthData"
 
 //Setup month data
 export async function GET(request: NextRequest, { params }: { params: { slug: string }}) {
@@ -64,7 +64,10 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
         { $set: { 
           month: date, 
           startingAmount: { amount: lastMonthEndingAmount, currency: session.user.currencyUsed }, 
-          endingAmount: { amount: 0, currency: session.user.currencyUsed }, 
+          endingAmount: { amount: 0, currency: session.user.currencyUsed },
+          totalIncome: { amount: 0, currency: session.user.currencyUsed },
+          totalExpenses: { amount: 0, currency: session.user.currencyUsed },
+          dailyBalance: [], //TODO: initialize with number of days in month and zeroed dineros?
           userId: new ObjectId(session.user.id) 
         }},
         { upsert: true }
@@ -90,18 +93,8 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
     //Update ending amount
     const transactions = await getTransactions(db, session, date)
 
-    const startingAmount = Dinero({ 
-      amount: monthData.startingAmount.amount, 
-      currency: monthData.startingAmount.currency 
-    })
-    
-    let endingAmount = startingAmount
-    transactions.forEach((transaction: Transaction) => {
-      endingAmount = endingAmount.add(Dinero({
-        amount: transaction.amount.amount,
-        currency: transaction.amount.currency
-      }))
-    })
+    //Calculate month data
+    const { dailyBalance, income, expenses, endingAmount } = calculateMonthData(transactions, monthData)
     
     if (endingAmount.getAmount() === monthData.endingAmount?.amount) return NextResponse.json(true)
 
