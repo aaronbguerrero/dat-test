@@ -49,3 +49,14 @@ export interface Transaction {
   recurrenceExceptions?: RecurrenceException[],
   parentId?: ObjectId,
 }
+
+export interface MonthData {
+  readonly _id: ObjectId,
+  month: string,
+  startingAmount: { amount: number, currency: Dinero.Currency },
+  userSetStartingAmount?: boolean,
+  endingAmount: { amount: number, currency: Dinero.Currency },
+  dailyBalance: { amount: number, currency: Dinero.Currency }[],
+  totalExpenses: { amount: number, currency: Dinero.Currency },
+  totalIncome: { amount: number, currency: Dinero.Currency },
+}
