@@ -8,11 +8,16 @@ import getTransactions from "../../../../lib/getTransactions"
 
 import type { MonthData } from "../../../../types"
 import type { Transaction } from "../../../../types"
+import generateDailyCashPosition from "../../../../lib/generateDailyCashPosition"
 
 //Set month data
 //1. Get data
   // Transactions and Starting Amount
+
 //2. Calculate data:
+  //-daily balance
+  //-total income
+  //-total expenses
   //-ending amount
 
 //3. Set data if different that what's stored
@@ -50,6 +55,7 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
       currency: monthData.startingAmount.currency 
     })
     
+    const dailyBalance = generateDailyCashPosition(transactions, monthData)
     let income = Dinero({ amount: 0, currency: monthData.startingAmount.currency })
     let expenses = Dinero({ amount: 0, currency: monthData.startingAmount.currency })
     let endingAmount = startingAmount
@@ -71,6 +77,11 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
 
     //If there is no change, return true
     if (
+      monthData.dailyBalance &&
+      dailyBalance.map((dailyAmount, index) => {
+        if (dailyAmount.getAmount() === monthData.dailyBalance[index]?.amount) return true
+        else return false
+      }) &&
       income.getAmount() === monthData.totalIncome?.amount &&
       expenses.getAmount() === monthData.totalExpenses?.amount &&
       endingAmount.getAmount() === monthData.endingAmount?.amount
@@ -80,6 +91,12 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
     const response = await db.collection("months").updateOne(
       { _id: monthData._id },
       { $set: {
+        dailyBalance: dailyBalance.map(dailyAmount => {
+          return {
+             amount: dailyAmount.getAmount(),
+             currency: dailyAmount.getCurrency(),
+            }
+        }),
         totalIncome: { amount: income.getAmount(), currency: session.user.currencyUsed },
         totalExpenses: { amount: expenses.getAmount(), currency: session.user.currencyUsed },
         endingAmount: { amount: endingAmount.getAmount(), currency: session.user.currencyUsed },

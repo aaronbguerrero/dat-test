@@ -44,14 +44,14 @@ export default function InfoPanel ({ month }: Props) {
   const { data: lastMonthEndingAmountData, error: lastMonthEndingAmountError } = useSWR<number>(`/api/months/getLastMonthEndingAmount/${toMonthString(month)}`)
   if (monthDataError || lastMonthEndingAmountError) toast.open("Sorry! There was a problem loading the month data. Please refresh the page.", 'error')
 
-  //Calculate and set values
-  const [endingAmount, setEndingAmount] = useState('')
+  // //Calculate and set values
+  // const [endingAmount, setEndingAmount] = useState('')
 
-  useEffect(() => {
-    if (monthData) {
-      setEndingAmount(monthData.endingAmount.amount.toString())
-    }
-  },[monthData])
+  // useEffect(() => {
+  //   if (monthData) {
+  //     setEndingAmount(monthData.endingAmount.amount.toString())
+  //   }
+  // },[monthData])
   
   const [lastMonthEndingAmount, setLastMonthEndingAmount] = useState('')
 
@@ -142,22 +142,42 @@ export default function InfoPanel ({ month }: Props) {
 
           <TableRow>
             <TableCell>Today&apos;s Balance</TableCell>
-            <TableCell align="right">$2344</TableCell>
+            <TableCell align="right">
+              {Dinero({ 
+                amount: removeCurrencyFormat(monthData?.dailyBalance[new Date().getUTCDate()]?.amount?.toString() || ''), 
+                currency: currencyUsed }).toFormat()
+              }
+            </TableCell>
           </TableRow>
 
           <TableRow>
             <TableCell>Total Income</TableCell>
-            <TableCell align="right">$2344</TableCell>
+            <TableCell align="right">
+              {Dinero({ 
+                amount: removeCurrencyFormat(monthData?.totalIncome.amount.toString() || ''), 
+                currency: currencyUsed }).toFormat()
+              }
+            </TableCell>
           </TableRow>
           <TableRow>
 
             <TableCell>Total Expenses</TableCell>
-            <TableCell align="right">$2344</TableCell>
+            <TableCell align="right">
+              {Dinero({ 
+                amount: removeCurrencyFormat(monthData?.totalExpenses.amount.toString() || ''), 
+                currency: currencyUsed }).toFormat()
+              }
+            </TableCell>
           </TableRow>
 
           <TableRow>
             <TableCell>Balance at End of Month</TableCell>
-            <TableCell align="right">{Dinero({ amount: removeCurrencyFormat(endingAmount), currency: currencyUsed }).toFormat()}</TableCell>
+            <TableCell align="right">
+              {Dinero({ 
+                amount: removeCurrencyFormat(monthData?.endingAmount.amount.toString() || ''), 
+                currency: currencyUsed }).toFormat()
+              }
+            </TableCell>
           </TableRow>
 
 <TableRow>
@@ -169,24 +189,24 @@ export default function InfoPanel ({ month }: Props) {
 
           <TableRow>
             <TableCell>Needed on First Day of Next Month</TableCell>
-            <TableCell align="right">$2344</TableCell>
+            <TableCell align="right">TBD</TableCell>
           </TableRow>
 
           <TableRow>
             <TableCell>You&apos;ve spent this much on credit cards this month</TableCell>
-            <TableCell align="right">$2344</TableCell>
+            <TableCell align="right">TBD</TableCell>
           </TableRow>
 
           <TableRow>
             {/* TODO: Remove "forecasted" in the past */}
             <TableCell>You&apos;re forcasted to pay this much back to credit cards this month</TableCell>
-            <TableCell align="right">$2344</TableCell>
+            <TableCell align="right">TBD</TableCell>
           </TableRow>
 
           <TableRow>
             {/* TODO: Remove "forecasted" in the past */}
             <TableCell>Total added/removed from debt</TableCell>
-            <TableCell align="right">$2344</TableCell>
+            <TableCell align="right">TBD</TableCell>
           </TableRow>
         </TableBody>
       </Table>
