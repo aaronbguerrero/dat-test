@@ -94,18 +94,6 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
     const transactions = await getTransactions(db, session, date)
 
     //Calculate month data
-    const { dailyBalance, income, expenses, endingAmount } = calculateMonthData(transactions, monthData)
-    
-    if (endingAmount.getAmount() === monthData.endingAmount?.amount) return NextResponse.json(true)
-
-    const response = await db.collection("months").updateOne(
-      { _id: monthData._id },
-      { $set: {endingAmount: { amount: endingAmount.getAmount(), currency: session.user.currencyUsed }}}
-    )
-    
-    if (response.modifiedCount === 1) return NextResponse.json(true)
-    else return NextResponse.json(false)
+    return calculateMonthData(transactions, monthData, db, session.user.currencyUsed || 'USD')
   }
-  
-  else return NextResponse.json(false)
 }
