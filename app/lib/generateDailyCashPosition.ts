@@ -3,10 +3,12 @@ import type { MonthData } from '../types'
 import Dinero from 'dinero.js'
 import getDaysInMonth from './dates/getDaysInMonth'
 
-//TODO: Fix currency and convert to Dinero
-export default function generateDailyCashPosition (transactions: Transaction[] | undefined, month: MonthData):number[] {
+export default function generateDailyCashPosition (
+  transactions: Transaction[] | undefined, month: MonthData
+):Dinero.Dinero[] {
   //Setup array with a baseline of 0 change for each day
-  const cashFlowModifiers = new Array(getDaysInMonth(month.month) + 1).fill(0)
+  const cashFlowModifiers: Dinero.Dinero[] = new Array(getDaysInMonth(month.month) + 1)
+  .fill(Dinero({ amount: 0, currency: month.startingAmount.currency }))
 
   //If data needed isn't there, return no change for entire month
   if ((!month.startingAmount) || (!transactions)) return cashFlowModifiers
@@ -19,12 +21,10 @@ export default function generateDailyCashPosition (transactions: Transaction[] |
     cashFlowModifiers.splice(
       index, 
       1, 
-      (existingModifier + 
-        Dinero({ 
-          amount: transaction.amount.amount, 
-          currency: transaction.amount.currency })
-        .getAmount()
-      )
+      (Dinero({
+        amount: existingModifier?.getAmount() + transaction.amount.amount,
+        currency: transaction.amount.currency,
+      }))
     )
   })
 
@@ -34,12 +34,14 @@ export default function generateDailyCashPosition (transactions: Transaction[] |
       amount: month.startingAmount.amount, 
       currency: month.startingAmount.currency 
     })
-    .getAmount()
   ]
   
-  cashFlowModifiers.slice(1).forEach((amount) => {
+  cashFlowModifiers.slice(1).forEach((modifier) => {
     const lastDayAmount = dailyCash[dailyCash.length - 1]
-    dailyCash.push(lastDayAmount + amount)
+    dailyCash.push(Dinero({
+      amount: lastDayAmount.getAmount() + modifier.getAmount(),
+      currency: modifier.getCurrency()
+    }))
   })
   
   return dailyCash

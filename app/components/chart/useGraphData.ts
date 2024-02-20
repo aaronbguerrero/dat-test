@@ -58,9 +58,13 @@ export default function useGraphData ( month: string, activeAccounts: string[] )
             },
             normalized: true,
             pointHitRadius: 10,
-            data: generateDailyCashPosition(transactions.filter(transaction => {
-              return transaction.account === account._id
-            }), monthData),
+            data: generateDailyCashPosition(
+              transactions.filter(transaction => {
+                return transaction.account === account._id
+              }), monthData
+            ).map(dailyAmount => {
+              return dailyAmount.getAmount()
+            }),
             pointBackgroundColor: (context: { dataIndex: any; dataset: { data: any[] } }) => {
               const index = context.dataIndex
               const amount = context.dataset.data[index]
