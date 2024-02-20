@@ -9,6 +9,7 @@ import getTransactions from "../../../../lib/getTransactions"
 import type { MonthData } from "../../../../types"
 import type { Transaction } from "../../../../types"
 import generateDailyCashPosition from "../../../../lib/generateDailyCashPosition"
+import calculateMonthData from "../../../../lib/calcMonthData"
 
 //Set month data
 //1. Get data
@@ -50,30 +51,7 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
     const transactions = await getTransactions(db, session, date)
 
     //Calculate month data
-    const startingAmount = Dinero({ 
-      amount: monthData.startingAmount.amount, 
-      currency: monthData.startingAmount.currency 
-    })
-    
-    const dailyBalance = generateDailyCashPosition(transactions, monthData)
-    let income = Dinero({ amount: 0, currency: monthData.startingAmount.currency })
-    let expenses = Dinero({ amount: 0, currency: monthData.startingAmount.currency })
-    let endingAmount = startingAmount
-    transactions.forEach((transaction: Transaction) => {
-      if (transaction.amount.amount >= 0) income = income.add(Dinero({
-        amount: transaction.amount.amount,
-        currency: transaction.amount.currency
-      }))
-      else expenses = expenses.add(Dinero({
-        amount: transaction.amount.amount,
-        currency: transaction.amount.currency
-      }))
-
-      endingAmount = endingAmount.add(Dinero({
-        amount: transaction.amount.amount,
-        currency: transaction.amount.currency
-      }))
-    })
+    const { dailyBalance, income, expenses, endingAmount } = calculateMonthData(transactions, monthData)
 
     //If there is no change, return true
     if (
