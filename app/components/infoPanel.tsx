@@ -8,7 +8,7 @@ import React, { useEffect, useState } from "react"
 import useSWR, { useSWRConfig } from 'swr'
 import { z } from 'zod'
 
-import type { MonthData } from "../api/months/getMonthData/[slug]/route"
+import type { MonthData } from "../types"
 import getCurrentMonth from "../lib/dates/getCurrentMonth"
 import toMonthString from "../lib/dates/toMonthString"
 import removeCurrencyFormat from "../lib/removeCurrencyFormat"

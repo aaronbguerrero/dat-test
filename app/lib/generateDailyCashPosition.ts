@@ -1,5 +1,5 @@
 import type { Transaction } from '../types'
-import type { MonthData } from '../api/months/getMonthData/[slug]/route'
+import type { MonthData } from '../types'
 import Dinero from 'dinero.js'
 import getDaysInMonth from './dates/getDaysInMonth'
 

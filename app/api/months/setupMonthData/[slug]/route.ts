@@ -10,7 +10,7 @@ import Dinero from 'dinero.js'
 import getPreviousMonth from "../../../../lib/dates/getPreviousMonth"
 import getTransactions from "../../../../lib/getTransactions"
 
-import type { MonthData } from "../../getMonthData/[slug]/route"
+import type { MonthData } from "../../../../types"
 import type { Transaction } from '../../../../types'
 
 //Setup month data
