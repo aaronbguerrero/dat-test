@@ -36,10 +36,14 @@ export default function InfoPanel ({ month }: Props) {
   const { mutate } = useSWRConfig()
 
   const [isFuture, setIsFuture] = useState(false)
+  const [isPast, setIsPast] = useState(false)
   useEffect(() => {
     const currentMonth = getCurrentMonth()
     const isFuture = month > currentMonth
+    const isPast = month < currentMonth
+
     setIsFuture(isFuture)
+    setIsPast(isPast)
   }, [month])
   //TODO: Is future add last few days of month
   
@@ -153,15 +157,17 @@ export default function InfoPanel ({ month }: Props) {
             </TableCell>
           </TableRow>
 
-          <TableRow>
-            <TableCell>Today&apos;s Balance</TableCell>
-            <TableCell align="right">
-              {Dinero({ 
-                amount: removeCurrencyFormat(monthData?.dailyBalance[new Date().getUTCDate()]?.amount?.toString() || ''), 
-                currency: currencyUsed }).toFormat()
-              }
-            </TableCell>
-          </TableRow>
+          {!isFuture && !isPast && 
+            <TableRow>
+              <TableCell>Today&apos;s Balance</TableCell>
+              <TableCell align="right">
+                {Dinero({ 
+                  amount: removeCurrencyFormat(monthData?.dailyBalance[new Date().getUTCDate()]?.amount?.toString() || ''), 
+                  currency: currencyUsed }).toFormat()
+                }
+              </TableCell>
+            </TableRow>
+          }
 
           <TableRow>
             <TableCell>Total Income</TableCell>
