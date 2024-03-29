@@ -10,8 +10,7 @@ import type { MonthData } from "../../../../types"
 export async function GET(request: NextRequest, { params }: { params: { slug: string }}) {
   const session = await getServerSession(AuthOptions)
 
-  const requestedMonth = params.slug
-  const date = new Date(requestedMonth)
+  const date = new Date(params.slug)
   const month = date.getUTCMonth() + 1
   const year = date.getUTCFullYear()
 

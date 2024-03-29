@@ -5,7 +5,7 @@ import generateDailyCashPosition from './generateDailyCashPosition'
 import type { MonthData, Transaction } from '../types'
 import { Db } from 'mongodb'
 
-export default async function calculateMonthData (
+export default async function calculateAndUpdateMonthData (
   transactions: Transaction[], 
   monthData: MonthData,
   db: Db,

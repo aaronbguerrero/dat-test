@@ -29,7 +29,15 @@ export default function Dashboard () {
 
   useEffect(() => {
     const setupMonth = async () => {
-      const response = await fetch(`/api/months/setupMonthData/${toMonthString(month)}`)
+      const response = await fetch(`/api/months/setupMonthData/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application:json',
+        },
+        body: JSON.stringify({
+          month: toMonthString(month)
+        }),
+      })
       .then(response => response.json())
       
       if (response === true) {

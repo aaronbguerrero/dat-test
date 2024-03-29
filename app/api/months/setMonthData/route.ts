@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
-import clientPromise from "../../../../lib/database"
+import clientPromise from "../../../lib/database"
 import { ObjectId } from "mongodb"
-import Dinero from 'dinero.js'
 import { getServerSession } from "next-auth/next"
-import { AuthOptions } from '../../../../lib/authOptions'
-import getTransactions from "../../../../lib/getTransactions"
+import { AuthOptions } from '../../../lib/authOptions'
+import getTransactions from "../../../lib/getTransactions"
 
-import type { MonthData } from "../../../../types"
-import type { Transaction } from "../../../../types"
-import generateDailyCashPosition from "../../../../lib/generateDailyCashPosition"
-import calculateMonthData from "../../../../lib/calcMonthData"
+import type { MonthData } from "../../../types"
+import calculateAndUpdateMonthData from "../../../lib/calcMonthData"
 
 //Set month data
 //1. Get data
-  // Transactions and Starting Amount
+  // Transactions and monthData
 
 //2. Calculate data:
   //-daily balance
@@ -23,11 +20,14 @@ import calculateMonthData from "../../../../lib/calcMonthData"
 
 //3. Set data if different that what's stored
 
-export async function GET(request: NextRequest, { params }: { params: { slug: string }}) {
+export async function PUT(request: NextRequest) {
+  const body: {
+    month: string,
+  } = await request.json()
+
   const session = await getServerSession(AuthOptions)
 
-  const requestedMonth = params.slug
-  const date = new Date(requestedMonth)
+  const date = new Date(body.month)
   const month = date.getUTCMonth() + 1
   const year = date.getUTCFullYear()
   
@@ -51,6 +51,6 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
     const transactions = await getTransactions(db, session, date)
 
     //Calculate and return month data
-    return calculateMonthData(transactions, monthData, db, session.user.currencyUsed || 'USD')
+    return calculateAndUpdateMonthData(transactions, monthData, db, session.user.currencyUsed || 'USD')
   }
 }

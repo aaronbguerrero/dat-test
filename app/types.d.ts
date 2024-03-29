@@ -50,6 +50,8 @@ export interface Transaction {
   parentId?: ObjectId,
 }
 
+export type MonthProperty = 'startingAmount' | 'endingAmount' | 'userSetStartingAmount' | 'dailyBalance' | 'totalExpenses' | 'totalIncome'
+
 export interface MonthData {
   readonly _id: ObjectId,
   month: string,

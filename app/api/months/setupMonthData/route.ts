@@ -1,24 +1,22 @@
 import { NextRequest, NextResponse } from "next/server"
-import toMonthString from "../../../../lib/dates/toMonthString"
 import { getServerSession } from "next-auth/next"
-import { AuthOptions } from '../../../../lib/authOptions'
-import clientPromise from "../../../../lib/database"
+import { AuthOptions } from '../../../lib/authOptions'
+import clientPromise from "../../../lib/database"
 import { ObjectId } from "mongodb" 
 
-import getPreviousMonth from "../../../../lib/dates/getPreviousMonth"
-import getTransactions from "../../../../lib/getTransactions"
+import getPreviousMonth from "../../../lib/dates/getPreviousMonth"
+import getTransactions from "../../../lib/getTransactions"
 
-import type { MonthData } from "../../../../types"
-import type { Transaction } from '../../../../types'
-import generateDailyCashPosition from "../../../../lib/generateDailyCashPosition"
-import calculateMonthData from "../../../../lib/calcMonthData"
+import type { MonthData } from "../../../types"
+import calculateMonthData from "../../../lib/calcMonthData"
 
 //Setup month data
-export async function GET(request: NextRequest, { params }: { params: { slug: string }}) {
-  const requestedMonth = params.slug
+export async function POST(request: NextRequest) {
+  const body: {
+    month: string,
+  } = await request.json()
   
-  const date = new Date(requestedMonth)
-  const monthString = toMonthString(date)
+  const date = new Date(body.month)
   const month = date.getUTCMonth() + 1
   const year = date.getUTCFullYear()
 

@@ -8,8 +8,7 @@ import getTransactions from '../../../../lib/getTransactions'
 export async function GET(request: NextRequest, { params }: { params: { slug: string }}) {
   const session = await getServerSession(AuthOptions)
   
-  const requestedMonth = params.slug
-  const date = new Date(requestedMonth)
+  const date = new Date(params.slug)
   
   const client = await clientPromise
   const db  = client.db("userData")
