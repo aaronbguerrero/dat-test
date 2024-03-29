@@ -280,7 +280,7 @@ export default function Calendar ({ month, setMonth }: Props) {
     }
 
     else setIsTransactionsLoading(true)
-  }, [transactions, theme])
+  }, [accounts, transactions, theme])
   
   return (
     <Paper sx={{ height: '100%' }}>

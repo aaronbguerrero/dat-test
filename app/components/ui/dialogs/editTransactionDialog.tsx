@@ -8,7 +8,7 @@ import BaseDialog, { BaseDialogProps, useDialog } from './baseDialog'
 import { DeleteTwoTone, EventRepeatTwoTone, LoopTwoTone, StarTwoTone } from '@mui/icons-material'
 import ExpenseIncomeButtons from '../buttons/expenseIncomeButtons'
 import toMonthString from '../../../lib/dates/toMonthString'
-import updateMonthData from '../../../lib/updateMonthData'
+import setMonthData from '../../../lib/setMonthData'
 import DeleteTransactionDialog, { DeleteTransactionDialogProps, useDeleteTransactionDialog } from './deleteTransactionDialog'
 import BasicToast, { BasicToastProps, useToast } from '../toasts/basicToast'
 import RecurEditDialog, { RecurEditDialogProps, useRecurEditDialog } from './recurEditDialog'
@@ -310,11 +310,11 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
     const response = await fetch(`/api/transactions/removeRecurrenceFromTransaction/`, {
       method: 'PATCH',
       headers: {
-        'Content-Type': 'application:json',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         _id: transaction.parentId,
-      })
+      }),
     })
       .then(response => response.json())
       .then(response => {
@@ -380,7 +380,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
 
         mutate(`/api/transactions/getTransactions/${toMonthString(new Date(transaction.date))}`)
 
-        updateMonthData(monthString)
+        setMonthData(monthString)
         .then(response => {
           if (response === true) mutate(`/api/months/getMonthData/${monthString}`)
           else toast.open("Sorry! There was a problem calculating the month ending amount, but the transaction was updated. Please refresh the page.", 'error')
@@ -414,7 +414,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
       },
       body: JSON.stringify({
         _id: transaction._id,
-        parentId: transaction.parentId,
+        parentId: transaction.parentId, 
         editType: editType,
         date: transaction.date,
         property: property,
@@ -429,7 +429,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
 
         mutate(`/api/transactions/getTransactions/${monthString}`)
 
-        updateMonthData(monthString)
+        setMonthData(monthString)
         .then(response => {
           if (response === true) mutate(`/api/months/getMonthData/${monthString}`)
           else toast.open("Sorry! There was a problem calculating the month ending amount, but the transaction was updated. Please refresh the page.", 'error')
@@ -516,7 +516,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
       
       mutate(`/api/transactions/getTransactions/${monthString}`)
       
-      updateMonthData(monthString)
+      setMonthData(monthString)
       .then(response => {
         if (response === true) mutate(`/api/months/getMonthData/${monthString}`)
         else toast.open("Sorry! There was a problem calculating the month ending amount, but the transaction was deleted. Please refresh the page.", 'error')

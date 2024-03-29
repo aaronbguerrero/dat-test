@@ -9,8 +9,7 @@ import getPreviousMonth from "../../../../lib/dates/getPreviousMonth"
 export async function GET(request: NextRequest, { params }: { params: { slug: string }}) {
   const session = await getServerSession(AuthOptions)
 
-  const requestedMonth = params.slug
-  const date = getPreviousMonth(new Date(requestedMonth)) //Create date object for current month and set it to previous month
+  const date = getPreviousMonth(new Date(params.slug)) //Create date object for current month and set it to previous month
 
   //Extract month and year
   const month = date.getUTCMonth() + 1

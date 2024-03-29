@@ -12,7 +12,7 @@ import type { MonthData } from "../types"
 import getCurrentMonth from "../lib/dates/getCurrentMonth"
 import toMonthString from "../lib/dates/toMonthString"
 import removeCurrencyFormat from "../lib/removeCurrencyFormat"
-import updateMonthData from "../lib/updateMonthData"
+import setMonthData from "../lib/setMonthData"
 import currencySchema from "../schemas/currencySchema"
 import EditableInputField from "./ui/formElements/editableInputField"
 import BasicToast, { useToast } from "./ui/toasts/basicToast"
@@ -35,32 +35,25 @@ export default function InfoPanel ({ month }: Props) {
 
   const { mutate } = useSWRConfig()
 
-  const currentMonth = getCurrentMonth()
-  const isFuture = month > currentMonth
+  const [isFuture, setIsFuture] = useState(false)
+  useEffect(() => {
+    const currentMonth = getCurrentMonth()
+    const isFuture = month > currentMonth
+    setIsFuture(isFuture)
+  }, [month])
   //TODO: Is future add last few days of month
   
   //Get month data
   const { data: monthData, error: monthDataError } = useSWR<MonthData>(`/api/months/getMonthData/${toMonthString(month)}`)
-  const { data: lastMonthEndingAmountData, error: lastMonthEndingAmountError } = useSWR<number>(`/api/months/getLastMonthEndingAmount/${toMonthString(month)}`)
-  if (monthDataError || lastMonthEndingAmountError) toast.open("Sorry! There was a problem loading the month data. Please refresh the page.", 'error')
-
-  // //Calculate and set values
-  // const [endingAmount, setEndingAmount] = useState('')
-
-  // useEffect(() => {
-  //   if (monthData) {
-  //     setEndingAmount(monthData.endingAmount.amount.toString())
-  //   }
-  // },[monthData])
+  const { data: lastMonthEndingAmount, error: lastMonthEndingAmountError } = useSWR<number>(`/api/months/getLastMonthEndingAmount/${toMonthString(month)}`)
   
-  const [lastMonthEndingAmount, setLastMonthEndingAmount] = useState('')
-
   useEffect(() => {
-    if (lastMonthEndingAmountData) {
-      setLastMonthEndingAmount(lastMonthEndingAmountData.toString())
+    if (monthDataError || lastMonthEndingAmountError) {
+      toast.open("Sorry! There was a problem loading the month data. Please refresh the page.", 'error')
     }
-  },[lastMonthEndingAmountData, currencyUsed])
-
+    else toast.close()
+  }, [monthDataError, lastMonthEndingAmountError, toast])
+  
   const handleStartingAmountSubmit = async (newValue: string): Promise<boolean> => {
     if (!monthData) {
       toast.open("Sorry! There was a problem updating the starting amount. Please try again!", 'error')
@@ -68,15 +61,36 @@ export default function InfoPanel ({ month }: Props) {
       return false
     }
 
-    const response = await fetch(`/api/months/updateMonthData/${monthData._id}/startingAmount/${removeCurrencyFormat(newValue)}/${currencyUsed}`)
+    const response = await fetch(`/api/months/updateMonthData/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application:json',
+      },
+      body: JSON.stringify({
+        _id: monthData._id,
+        property: 'startingAmount',
+        value: removeCurrencyFormat(newValue),
+        currency: currencyUsed,
+      }),
+    })
     .then(response => response.json())
     .then(async response => {
       if (response === true) {
-        const response = await fetch(`/api/months/updateMonthData/${monthData._id}/userSetStartingAmount/true`)
+        const response = await fetch(`/api/months/updateMonthData/`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application:json',
+          },
+          body: JSON.stringify({
+            _id: monthData._id,
+            property: 'userSetStartingAmount',
+            value: true,
+          }),
+        })
         .then(response => response.json())
         .then(response => {
           if (response === true) {
-            updateMonthData(monthData.month || "")
+            setMonthData(monthData.month || "")
             .then(response => {
               if (response === true) toast.open("Starting amount updated successfully!", 'success')
               else toast.open("Sorry! There was a problem updating the ending amount. Please refresh the page.", 'error')
@@ -106,7 +120,6 @@ export default function InfoPanel ({ month }: Props) {
   const schema = currencySchema(currencyUsed)
 
   const handleAccountsChange = (test: string[]) => {
-    console.log(test)
   }
 
   return (
@@ -129,7 +142,7 @@ export default function InfoPanel ({ month }: Props) {
               id='startingAmount'
               value={
                 isFuture ? 
-                Dinero({ amount: removeCurrencyFormat(lastMonthEndingAmount), currency: currencyUsed }).toFormat() 
+                Dinero({ amount: lastMonthEndingAmount || 0, currency: currencyUsed }).toFormat() 
                 : 
                 Dinero({ amount: monthData?.startingAmount.amount || 0, currency: currencyUsed }).toFormat()
               } 
