@@ -162,7 +162,7 @@ export default function InfoPanel ({ month }: Props) {
               <TableCell>Today&apos;s Balance</TableCell>
               <TableCell align="right">
                 {Dinero({ 
-                  amount: removeCurrencyFormat(monthData?.dailyBalance[new Date().getUTCDate()]?.amount?.toString() || ''), 
+                  amount: removeCurrencyFormat(monthData?.dailyBalance[new Date().getDate()]?.amount?.toString() || ''), 
                   currency: currencyUsed }).toFormat()
                 }
               </TableCell>

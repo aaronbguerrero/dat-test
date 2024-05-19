@@ -18,14 +18,10 @@ export default function generateDailyCashPosition (
     const index = new Date(transaction.date).getUTCDate()
     const existingModifier = cashFlowModifiers[index]
 
-    cashFlowModifiers.splice(
-      index, 
-      1, 
-      (Dinero({
-        amount: existingModifier?.getAmount() + transaction.amount.amount,
-        currency: transaction.amount.currency,
-      }))
-    )
+    cashFlowModifiers[index] = Dinero({
+      amount: existingModifier?.getAmount() + transaction.amount.amount,
+      currency: transaction.amount.currency,
+    })
   })
 
   //Generate graph data based on the starting amount
