@@ -1,9 +1,10 @@
 import { NextAuthOptions } from 'next-auth'
-import { MongoDBAdapter } from '@next-auth/mongodb-adapter'
+import { MongoDBAdapter } from '@auth/mongodb-adapter'
 import Email from 'next-auth/providers/email'
 import GoogleProvider, { GoogleProfile } from 'next-auth/providers/google'
 import clientPromise from '../lib/database'
 import { ObjectId } from 'mongodb'
+import { Adapter } from 'next-auth/adapters'
 
 
 export const AuthOptions: NextAuthOptions = {
@@ -13,7 +14,7 @@ export const AuthOptions: NextAuthOptions = {
       collections: { Accounts: 'linkedUserAccounts' }, 
       databaseName: 'userData',
     },
-  ),
+  ) as Adapter,
   callbacks: {
     jwt: async ({ token, trigger, session }) => {
       let property = ''

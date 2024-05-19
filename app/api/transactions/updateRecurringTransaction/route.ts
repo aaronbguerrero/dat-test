@@ -183,7 +183,7 @@ export async function PATCH(request: NextRequest) {
       if ((ruleOptions.count === 0) || (ruleOptions.until && (new Date(ruleOptions.until) < new Date(parent.date)))) {
         //If parent transaction would have no occurrences, then update it with new information
         if (new Date(date) >= new Date(parent.date)) {
-          return await db.collection<Transaction>("transactions").findOneAndReplace(
+          const updatedParent = await db.collection<Transaction>("transactions").findOneAndReplace(
             { _id: parent._id },
             { 
               ...newTransaction,
@@ -193,6 +193,11 @@ export async function PATCH(request: NextRequest) {
             },
             { returnDocument: 'after' },
             )
+
+            const modifyResult: ModifyResult<Transaction> = {
+              value: updatedParent,
+              ok: 1,
+            }
           } 
           
         //If date is an exclusion before the parent, update:
@@ -235,10 +240,12 @@ export async function PATCH(request: NextRequest) {
                 response._id = body._id
                 response.date = body.date
 
-                return ({
+                const modifyResult: ModifyResult<Transaction> = {
                   ok: 1,
                   value: response,
-                })
+                }
+
+                return modifyResult
               })
             })
           })
@@ -260,7 +267,7 @@ export async function PATCH(request: NextRequest) {
         )
         //Insert new transaction for future occurrences
         .then(async response => {
-          if (!response.ok || !response.value) throw new Error("Error updating")
+          if (!response) throw new Error("Error updating")
 
           const insertResult = await db.collection("transactions")
           .insertOne({
@@ -273,18 +280,19 @@ export async function PATCH(request: NextRequest) {
           })
 
           if (insertResult.insertedId) {
-            response.value = {...newTransaction, ...{ _id: insertResult.insertedId }}
+            const modifyResult: ModifyResult<Transaction> = {
+              value: {...newTransaction, ...{ _id: insertResult.insertedId }},
+              ok: 1,
+            }
 
-            return response
+            return modifyResult
           }
           else throw new Error("Error updating")
         })
       } 
     })
 
-    if (response.ok) {
-      return NextResponse.json(response)
-    } 
+    if (response?.ok == 1) return NextResponse.json(response)
 
     else return NextResponse.json({ error: "Problem updating recurring transaction." }, { status: 500 })
   }

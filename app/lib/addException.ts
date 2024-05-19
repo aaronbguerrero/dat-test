@@ -1,4 +1,4 @@
-import { Db, ObjectId } from "mongodb"
+import { Db, ModifyResult, ObjectId } from "mongodb"
 import type { RecurrenceException, RecurrenceExceptionProperty, Transaction } from "../types"
 
 export default async function addException(
@@ -8,6 +8,11 @@ export default async function addException(
   property: RecurrenceExceptionProperty,
   value: string | Date | ObjectId | { amount: number, currency: Dinero.Currency } | boolean,
 ) {
+  const modifyResult: ModifyResult<Transaction> = {
+    value: null,
+    ok: 0,
+  }
+
   //Check if there is exception on the date, then patch or add as needed
   const newProperty = "recurrenceExceptions.$." + [property]
 
@@ -19,7 +24,14 @@ export default async function addException(
     { returnDocument: 'after' },
   )
 
-  if (response.value !== null) return response
+  
+
+  if (response !== null) {
+    modifyResult.value = response
+    modifyResult.ok = 1
+    
+    return modifyResult
+  }
   else {
   const exceptionToAdd: RecurrenceException = {
     originalDate: new Date(dateToExcept),
@@ -32,7 +44,12 @@ export default async function addException(
     { $push: { recurrenceExceptions: exceptionToAdd }},
     { returnDocument: 'after' },
     )
+
+    if (insertResponse !== null) {
+      modifyResult.value = insertResponse
+      modifyResult.ok = 1
+    } 
     
-    return insertResponse
+    return modifyResult
   }
-  }
+}
