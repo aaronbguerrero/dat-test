@@ -1,5 +1,5 @@
 import { Box } from "@mui/material"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import RecurrenceSelector, { RecurrenceSelectorProps } from "./recurrenceSelector"
 import EditButton from "../buttons/editButton"
 import RemoveButton from "../buttons/removeButton"
@@ -39,10 +39,11 @@ export default function EditableRecurrenceSelector ({
   } = useEditable(handleSubmit, value, isEditingFlag)
 
   //Allow to be editable on open
-  //TODO: find a better way to do this
-  useEffect(() => {
+  const hasMounted = useRef(false) 
+  if (!hasMounted.current) {
     setIsEditable(editOnOpen || false)
-  }, [])
+    hasMounted.current = true
+  }
 
   const onClickAway = () => {
     if(isEditable) {

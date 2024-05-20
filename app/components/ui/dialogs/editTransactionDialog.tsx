@@ -212,8 +212,13 @@ export default function EditTransactionDialog ({
 }
 
 export function useEditTransactionDialog(mutate: (key: string) => void, transactions: Transaction[] | undefined) { 
+  const cleanupClose = () => {
+    setIsEditing(false)
+    setIsAddingRecur(false)
+  }
+  
   const toast = useToast()
-  const dialogHook = useDialog()
+  const dialogHook = useDialog(cleanupClose)
 
   const { data: session } = useSession()
   useEffect(() => {
@@ -234,8 +239,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
 
   const handleClose = () => {
     dialogHook.close()
-    setIsEditing(false)
-    setIsAddingRecur(false)
+    cleanupClose()
   }
   
   const handleOpen = (transactionToOpen: Transaction | undefined) => {
