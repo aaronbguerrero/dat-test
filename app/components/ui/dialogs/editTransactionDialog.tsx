@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react'
-import { Box, Button, DialogTitle, Divider, Stack, Tooltip } from '@mui/material'
+import { useEffect, useState } from 'react'
+import { Box, Button, Stack, Tooltip } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { useSession } from 'next-auth/react'
 import Dinero from 'dinero.js'
 import removeCurrencyFormat from '../../../lib/removeCurrencyFormat'
 import BaseDialog, { BaseDialogProps, useDialog } from './baseDialog'
-import { DeleteTwoTone, EventRepeatTwoTone, LoopTwoTone, StarTwoTone } from '@mui/icons-material'
+import { DeleteTwoTone, EventRepeatTwoTone, LoopTwoTone } from '@mui/icons-material'
 import ExpenseIncomeButtons from '../buttons/expenseIncomeButtons'
 import toMonthString from '../../../lib/dates/toMonthString'
 import setMonthData from '../../../lib/setMonthData'
@@ -223,7 +223,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
   const { data: session } = useSession()
   useEffect(() => {
     if (!session?.user) toast.open("Could not load user data, please refresh page.", 'error')
-    else toast.close()
+    else if (session?.user && toast.content === "Could not load user data, please refresh page.") toast.close()
   }, [session, toast])
 
   //States and handlers

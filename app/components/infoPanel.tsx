@@ -55,7 +55,7 @@ export default function InfoPanel ({ month }: Props) {
     if (monthDataError || lastMonthEndingAmountError) {
       toast.open("Sorry! There was a problem loading the month data. Please refresh the page.", 'error')
     }
-    else toast.close()
+    else if (toast.content === "Sorry! There was a problem loading the month data. Please refresh the page.") toast.close()
   }, [monthDataError, lastMonthEndingAmountError, toast])
   
   const handleStartingAmountSubmit = async (newValue: string): Promise<boolean> => {
@@ -98,9 +98,11 @@ export default function InfoPanel ({ month }: Props) {
             .then(response => {
               if (response === true) toast.open("Starting amount updated successfully!", 'success')
               else toast.open("Sorry! There was a problem updating the ending amount. Please refresh the page.", 'error')
+
+              mutate(`/api/months/getMonthData/${toMonthString(month)}`)
             })
             
-            mutate(`/api/months/getMonthData/${toMonthString(month)}`)
+            // mutate(`/api/months/getMonthData/${toMonthString(month)}`)
             return true
           }
           else {

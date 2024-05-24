@@ -19,7 +19,7 @@ export default function AccountsButtons ({ onChange, exclusive, orientation }: P
     if (accountsError) {
       toast.open("Sorry! There was a problem loading your accounts, please refresh the page!", 'error')
     }
-    else toast.close()
+    else if (toast.content === "Sorry! There was a problem loading your accounts, please refresh the page!") toast.close()
   }, [accountsError, toast])
 
   //Setup active accounts control

@@ -20,6 +20,7 @@ import { ModifyResult } from "mongodb"
 import isDateInMonth from "../lib/dates/isDateInMonth"
 import { PaidTwoTone } from "@mui/icons-material"
 import getDaysInMonth from "../lib/dates/getDaysInMonth"
+import setMonthData from "../lib/setMonthData"
 
 type Props = { 
   month: string, 
@@ -132,7 +133,8 @@ export default function Calendar ({ month, setMonth }: Props) {
     .then(response => {
       if (response.ok === 1) {
         mutate(`/api/transactions/getTransactions/${month}`)
-        //TODO: Update month ending amount (should rethink this piece)
+      
+        setMonthData(month || "")
         
         toast.open("Transaction(s) updated successfully!", 'success')
       }

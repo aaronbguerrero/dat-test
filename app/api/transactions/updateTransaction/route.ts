@@ -1,6 +1,7 @@
-import { ObjectId } from "mongodb"
+import { ModifyResult, ObjectId } from "mongodb"
 import { NextRequest, NextResponse } from "next/server"
 import clientPromise from "../../../lib/database"
+import type { Transaction } from "../../../types"
 
 //Update Transaction
 export async function PATCH(request: NextRequest) {
@@ -27,11 +28,16 @@ export async function PATCH(request: NextRequest) {
   const client = await clientPromise
   const db = client.db("userData")
 
-  const response = await db.collection("transactions").findOneAndUpdate(
+  const response = await db.collection<Transaction>("transactions").findOneAndUpdate(
     { _id: new ObjectId(body._id) },
     { $set: {[body.property]: value}},
     { returnDocument: 'after' },
-    )
+  )
 
-  return NextResponse.json(response)
+  const modifyResult: ModifyResult = {
+    value: response,
+    ok: response ? 1 : 0,
+  }
+
+  return NextResponse.json(modifyResult)
 }

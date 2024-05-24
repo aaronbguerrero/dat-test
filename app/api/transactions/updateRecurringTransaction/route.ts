@@ -13,6 +13,7 @@ import { isSameDay } from "../../../lib/dates/isSameDay"
 
 export async function PATCH(request: NextRequest) {
   const session = await getServerSession(AuthOptions)
+  const userId = new ObjectId(session?.user?.id)
 
   const body: {
     _id: ObjectId,
@@ -79,6 +80,7 @@ export async function PATCH(request: NextRequest) {
     //update any child transactions in the future
     const response = await db.collection<Transaction>("transactions").updateMany(
       { 
+        userId: userId,
         parentId: id,
       },
       { $set: { 
@@ -92,7 +94,7 @@ export async function PATCH(request: NextRequest) {
       const propertyToSet = "recurrenceExceptions.$." + body.property.toString()
       return await db.collection<Transaction>("transactions").updateMany(
         { 
-          userId: new ObjectId(session?.user?.id),
+          userId: userId,
           parentId: id,
           "recurrenceExceptions.date": { "$gte": new Date(body.date) },
         },
@@ -302,15 +304,18 @@ export async function PATCH(request: NextRequest) {
 
     const parent = await db.collection<Transaction>("transactions").findOne({ _id: id })
     if (!parent) return NextResponse.json({ error: 'Parent transaction not found' }, { status: 404 })
+
+    const selectors = [{ _id: parent._id }, { parentId: parent._id }]
+    if (parent.parentId) {
+      selectors.push(
+        { parentId: parent.parentId || new ObjectId() },
+        { _id: parent.parentId || new ObjectId() }
+      )
+    }
   
     const response = await db.collection<Transaction>("transactions").updateMany(
       { 
-        $or: [
-          { _id: parent._id },
-          { parentId: parent.parentId },
-          { _id: parent.parentId },
-          { parentId: parent._id },
-        ]
+        $or: selectors
       },
       { $set: {[body.property]: value}},
     )
@@ -321,7 +326,7 @@ export async function PATCH(request: NextRequest) {
 
         const exceptionResponse = await db.collection<Transaction>("transactions").updateMany(
           { 
-            userId: new ObjectId(session?.user?.id),
+            userId: userId,
             $or: [
               { parentId: id },
               { _id: id },
@@ -341,11 +346,11 @@ export async function PATCH(request: NextRequest) {
         { _id: id }
       )
 
-      const ModifyResultResponse: ModifyResult<Transaction> = {
+      const modifyResultResponse: ModifyResult<Transaction> = {
         ok: 1,
         value: transaction,
       }
-      return NextResponse.json(ModifyResultResponse)
+      return NextResponse.json(modifyResultResponse)
     } 
 
     else return NextResponse.json({ error: "Problem updating recurring transaction." }, { status: 500 })
