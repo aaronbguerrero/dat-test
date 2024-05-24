@@ -297,7 +297,7 @@ export default function Calendar ({ month, setMonth }: Props) {
         height='100%'
         >
           <CircularProgress 
-          size={'10%'} 
+          size={'4rem'} 
           color='info' 
           thickness={2}
           />

@@ -87,6 +87,26 @@ export async function PATCH(request: NextRequest) {
         [body.property]: value,
       }},
     )
+
+    // const exceptionPropertyToSet = "recurrenceExceptions.$." + body.property.toString()
+    // const response = await db.collection<Transaction>("transactions").updateMany(
+    //   { 
+    //     userId: userId,
+    //     $or: [
+    //       { parentId: id },
+    //       { 
+    //         parentId: id,
+    //         "recurrenceExceptions.date": { "$gte": new Date(body.date) },
+    //       }
+    //     ]
+    //   },
+    //   { $set: { 
+    //     [body.property]: value,
+    //     [exceptionPropertyToSet]: value
+    //   }},
+    // )
+
+
     //Update any exception of a child transaction that's in the future (based on date, not originalDate)
     .then(async response => {
       if (!response.acknowledged) throw new Error("Error updating")
@@ -100,6 +120,43 @@ export async function PATCH(request: NextRequest) {
         },
         { $set: { [propertyToSet]: value}}
       )
+    })
+    //Update grandparent's children and exceptions
+    .then(async response => {
+      if (!response.acknowledged) throw new Error("Error updating")
+    
+      const grandParentId = parent.parentId
+    
+      if (grandParentId) {
+        const grandParent = await db.collection<Transaction>("transactions").findOne({ _id: grandParentId })
+        
+        if (grandParent) {
+          // Update children of grandParent
+          const updateChildrenResponse = await db.collection<Transaction>("transactions").updateMany(
+            { parentId: grandParentId },
+            { $set: { [body.property]: value }}
+          )
+    
+          if (updateChildrenResponse.acknowledged) {
+            // Update exceptions of children and grandParent in the future
+            const propertyToSet = "recurrenceExceptions.$." + body.property.toString()
+    
+            return await db.collection<Transaction>("transactions").updateMany(
+              { 
+                userId: userId,
+                $or: [
+                  { parentId: grandParentId },
+                  { _id: grandParentId },
+                ],
+                "recurrenceExceptions.date": { "$gte": new Date(body.date) },
+              },
+              { $set: { [propertyToSet]: value }}
+            )
+          }
+        }
+      }
+    
+      return response
     })
     //Update/delete recurrence rule in parent (if needed)
     .then(async response => {
