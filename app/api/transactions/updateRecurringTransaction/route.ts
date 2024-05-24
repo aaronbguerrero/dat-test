@@ -13,6 +13,7 @@ import { isSameDay } from "../../../lib/dates/isSameDay"
 
 export async function PATCH(request: NextRequest) {
   const session = await getServerSession(AuthOptions)
+  const userId = new ObjectId(session?.user?.id)
 
   const body: {
     _id: ObjectId,
@@ -79,6 +80,7 @@ export async function PATCH(request: NextRequest) {
     //update any child transactions in the future
     const response = await db.collection<Transaction>("transactions").updateMany(
       { 
+        userId: userId,
         parentId: id,
       },
       { $set: { 
@@ -92,7 +94,7 @@ export async function PATCH(request: NextRequest) {
       const propertyToSet = "recurrenceExceptions.$." + body.property.toString()
       return await db.collection<Transaction>("transactions").updateMany(
         { 
-          userId: new ObjectId(session?.user?.id),
+          userId: userId,
           parentId: id,
           "recurrenceExceptions.date": { "$gte": new Date(body.date) },
         },
@@ -324,7 +326,7 @@ export async function PATCH(request: NextRequest) {
 
         const exceptionResponse = await db.collection<Transaction>("transactions").updateMany(
           { 
-            userId: new ObjectId(session?.user?.id),
+            userId: userId,
             $or: [
               { parentId: id },
               { _id: id },
