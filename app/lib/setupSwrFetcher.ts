@@ -5,8 +5,7 @@ export default function setupSwrFetcher (errorMessage: string, toast: BasicToast
   const fetcher = {
     fetcher: (url: string) => fetch(url)
     .then(response => {
-      if (response.ok) toast.close()
-      else toast.open(errorMessage, 'error')
+      if (!response.ok) toast.open(errorMessage, 'error')
       
       return response.json()
     })

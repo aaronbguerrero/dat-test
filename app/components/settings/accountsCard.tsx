@@ -16,7 +16,7 @@ export default function AccountsCard ({}) {
   const {data: accounts, error: accountsError, mutate } = useSWR<Account[]>(`/api/accounts/getAccounts`)
   useEffect(() => {
     if (accountsError) toast.open("Sorry! There was a problem loading the month data. Please refresh the page.", 'error')
-    else toast.close()
+    else if (toast.content === "Sorry! There was a problem loading the month data. Please refresh the page.") toast.close()
   }, [accountsError, toast])
   
   const [isAccountsLoading, setIsAccountsLoading] = useState(true)

@@ -30,7 +30,7 @@ export default function Chart ({ month }: { month: string }) {
   const { data: graphData, error: graphError } = useGraphData(month, activeAccounts)
   useEffect(() => {
     if (graphError) toast.open("Sorry! There was a problem loading some of the graph data. Please refresh the page.", 'error')
-    else toast.close()
+    else if (toast.content === "Sorry! There was a problem loading some of the graph data. Please refresh the page.") toast.close()
   }, [graphError, toast])
   
   return (
