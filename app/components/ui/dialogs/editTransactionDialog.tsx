@@ -223,7 +223,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
   const { data: session } = useSession()
   useEffect(() => {
     if (!session?.user) toast.open("Could not load user data, please refresh page.", 'error')
-    else toast.close()
+    else if (session?.user) toast.close()
   }, [session, toast])
 
   //States and handlers
