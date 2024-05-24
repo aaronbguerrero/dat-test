@@ -341,11 +341,11 @@ export async function PATCH(request: NextRequest) {
         { _id: id }
       )
 
-      const ModifyResultResponse: ModifyResult<Transaction> = {
+      const modifyResultResponse: ModifyResult<Transaction> = {
         ok: 1,
         value: transaction,
       }
-      return NextResponse.json(ModifyResultResponse)
+      return NextResponse.json(modifyResultResponse)
     } 
 
     else return NextResponse.json({ error: "Problem updating recurring transaction." }, { status: 500 })
