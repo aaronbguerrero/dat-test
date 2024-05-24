@@ -136,15 +136,18 @@ export async function DELETE(request: NextRequest) {
     const parent = await db.collection<Transaction>("transactions").findOne({ _id: id })
     if (!parent) return NextResponse.json({ error: 'Parent transaction not found' }, { status: 404 })
 
+    const selectors = [{ _id: parent._id }, { parentId: parent._id }]
+    if (parent.parentId) {
+      selectors.push(
+        { parentId: parent.parentId || new ObjectId() },
+        { _id: parent.parentId || new ObjectId() }
+      )
+    }
+
     const response = await db.collection("transactions").deleteMany({ 
       $and: [
         {
-          $or: [
-            { _id: parent._id || new ObjectId() },
-            { parentId: parent.parentId || new ObjectId() },
-            { _id: parent.parentId || new ObjectId() },
-            { parentId: parent._id || new ObjectId() },
-          ]
+          $or: selectors
         },
         { userId: new ObjectId(session?.user?.id) }
       ]
