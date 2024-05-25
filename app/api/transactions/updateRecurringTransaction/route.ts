@@ -386,10 +386,7 @@ export async function PATCH(request: NextRequest) {
         const exceptionResponse = await dbTransactions.updateMany(
           { 
             userId: userId,
-            $or: [
-              { parentId: id },
-              { _id: id },
-            ],
+            $or: selectors,
             
             [propertyToFind]: { "$exists": true },
           },
