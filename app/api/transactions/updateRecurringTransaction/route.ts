@@ -47,6 +47,7 @@ export async function PATCH(request: NextRequest) {
   
   const client = await clientPromise
   const db = client.db("userData")
+  const dbTransactions = db.collection<Transaction>("transactions")
 
   if (body.editType === 'single') {
     const id: ObjectId = new ObjectId(body.parentId || body._id)
@@ -74,11 +75,11 @@ export async function PATCH(request: NextRequest) {
     //Update end date in parent transaction, create new recurring transaction in it's place
 
     //Get parent transaction
-    const parent = await db.collection<Transaction>("transactions").findOne({ _id: id })
+    const parent = await dbTransactions.findOne({ _id: id })
     if (!parent) return NextResponse.json({ error: 'Parent transaction not found' }, { status: 404 })
 
     //update any child transactions in the future
-    const response = await db.collection<Transaction>("transactions").updateMany(
+    const response = await dbTransactions.updateMany(
       { 
         userId: userId,
         parentId: id,
@@ -89,7 +90,7 @@ export async function PATCH(request: NextRequest) {
     )
 
     // const exceptionPropertyToSet = "recurrenceExceptions.$." + body.property.toString()
-    // const response = await db.collection<Transaction>("transactions").updateMany(
+    // const response = await dbTransactions.updateMany(
     //   { 
     //     userId: userId,
     //     $or: [
@@ -112,7 +113,7 @@ export async function PATCH(request: NextRequest) {
       if (!response.acknowledged) throw new Error("Error updating")
 
       const propertyToSet = "recurrenceExceptions.$." + body.property.toString()
-      return await db.collection<Transaction>("transactions").updateMany(
+      return await dbTransactions.updateMany(
         { 
           userId: userId,
           parentId: id,
@@ -128,11 +129,11 @@ export async function PATCH(request: NextRequest) {
       const grandParentId = parent.parentId
     
       if (grandParentId) {
-        const grandParent = await db.collection<Transaction>("transactions").findOne({ _id: grandParentId })
+        const grandParent = await dbTransactions.findOne({ _id: grandParentId })
         
         if (grandParent) {
           // Update children of grandParent
-          const updateChildrenResponse = await db.collection<Transaction>("transactions").updateMany(
+          const updateChildrenResponse = await dbTransactions.updateMany(
             { parentId: grandParentId },
             { $set: { [body.property]: value }}
           )
@@ -141,7 +142,7 @@ export async function PATCH(request: NextRequest) {
             // Update exceptions of children and grandParent in the future
             const propertyToSet = "recurrenceExceptions.$." + body.property.toString()
     
-            return await db.collection<Transaction>("transactions").updateMany(
+            return await dbTransactions.updateMany(
               { 
                 userId: userId,
                 $or: [
@@ -242,7 +243,7 @@ export async function PATCH(request: NextRequest) {
       if ((ruleOptions.count === 0) || (ruleOptions.until && (new Date(ruleOptions.until) < new Date(parent.date)))) {
         //If parent transaction would have no occurrences, then update it with new information
         if (new Date(date) >= new Date(parent.date)) {
-          const updatedParent = await db.collection<Transaction>("transactions").findOneAndReplace(
+          const updatedParent = await dbTransactions.findOneAndReplace(
             { _id: parent._id },
             { 
               ...newTransaction,
@@ -263,7 +264,7 @@ export async function PATCH(request: NextRequest) {
         // parent or children,
         // and all exclusions of both parent and children after the date
         else {
-          return await db.collection<Transaction>("transactions").updateMany(
+          return await dbTransactions.updateMany(
             { $or: [
               { _id: parent._id },
               { parentId: parent._id }
@@ -277,7 +278,7 @@ export async function PATCH(request: NextRequest) {
 
             const propertyToSet = "recurrenceExceptions.$." + body.property.toString()
 
-            return await db.collection<Transaction>("transactions").updateMany(
+            return await dbTransactions.updateMany(
               { 
                 $and: [
                   { $or: [
@@ -292,7 +293,7 @@ export async function PATCH(request: NextRequest) {
             .then(async response => {
               if (!response.acknowledged) throw new Error("Error updating")
 
-              return await db.collection<Transaction>("transactions").findOne({ _id: id })
+              return await dbTransactions.findOne({ _id: id })
               .then(response => {
                 if (!response) throw new Error("Error updating")
 
@@ -314,7 +315,7 @@ export async function PATCH(request: NextRequest) {
 
       //Otherwise, update parent and create new transaction for future occurrences
       else {
-        return await db.collection<Transaction>("transactions").findOneAndUpdate(
+        return await dbTransactions.findOneAndUpdate(
           { _id: parent._id },
           { 
             $set: {
@@ -359,7 +360,7 @@ export async function PATCH(request: NextRequest) {
   else if (body.editType === 'all') {
     const id: ObjectId = new ObjectId(body.parentId || body._id)
 
-    const parent = await db.collection<Transaction>("transactions").findOne({ _id: id })
+    const parent = await dbTransactions.findOne({ _id: id })
     if (!parent) return NextResponse.json({ error: 'Parent transaction not found' }, { status: 404 })
 
     const selectors = [{ _id: parent._id }, { parentId: parent._id }]
@@ -370,7 +371,7 @@ export async function PATCH(request: NextRequest) {
       )
     }
   
-    const response = await db.collection<Transaction>("transactions").updateMany(
+    const response = await dbTransactions.updateMany(
       { 
         $or: selectors
       },
@@ -381,7 +382,7 @@ export async function PATCH(request: NextRequest) {
         const propertyToFind = "recurrenceExceptions." + body.property.toString()
         const propertyToSet = "recurrenceExceptions.$." + body.property.toString()
 
-        const exceptionResponse = await db.collection<Transaction>("transactions").updateMany(
+        const exceptionResponse = await dbTransactions.updateMany(
           { 
             userId: userId,
             $or: [
@@ -399,7 +400,7 @@ export async function PATCH(request: NextRequest) {
     })
 
     if (response?.acknowledged) {
-      const transaction = await db.collection<Transaction>("transactions").findOne(
+      const transaction = await dbTransactions.findOne(
         { _id: id }
       )
 
