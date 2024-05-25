@@ -12,6 +12,7 @@ import { isSameDay } from "../../../lib/dates/isSameDay"
 //Update Recurring Transaction 
 
 export async function PATCH(request: NextRequest) {
+  const errorMessage = "Problem updating recurring transaction."
   const session = await getServerSession(AuthOptions)
   const userId = new ObjectId(session?.user?.id)
 
@@ -42,7 +43,7 @@ export async function PATCH(request: NextRequest) {
 
     //Check to make sure recurrence is not trying to be edited, return error if it is
     case ('recurrenceFreq'):
-      if (body.editType !== 'all') return NextResponse.json({ error: "Problem updating recurring transaction." }, { status: 500 })
+      if (body.editType !== 'all') return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
   
   const client = await clientPromise
@@ -66,7 +67,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json(response)
     }
 
-    else return NextResponse.json({ error: "Problem updating recurring transaction." }, { status: 500 })
+    else return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
   
   else if (body.editType === 'future') {  
@@ -354,7 +355,7 @@ export async function PATCH(request: NextRequest) {
 
     if (response?.ok == 1) return NextResponse.json(response)
 
-    else return NextResponse.json({ error: "Problem updating recurring transaction." }, { status: 500 })
+    else return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
   
   else if (body.editType === 'all') {
@@ -411,8 +412,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json(modifyResultResponse)
     } 
 
-    else return NextResponse.json({ error: "Problem updating recurring transaction." }, { status: 500 })
+    else return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 
-  else return NextResponse.json({ error: "Problem updating recurring transaction." }, { status: 500 })
+  else return NextResponse.json({ error: errorMessage }, { status: 500 })
 }
