@@ -17,8 +17,6 @@ import EditTransactionDialog, { useEditTransactionDialog } from "./ui/dialogs/ed
 
 import type { Account, RecurrenceEditType, Transaction } from '../types'
 import { ModifyResult } from "mongodb"
-import isDateInMonth from "../lib/dates/isDateInMonth"
-import { PaidTwoTone } from "@mui/icons-material"
 import getDaysInMonth from "../lib/dates/getDaysInMonth"
 import setMonthData from "../lib/setMonthData"
 
