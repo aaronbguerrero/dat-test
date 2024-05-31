@@ -2,16 +2,19 @@ import { useEffect, useState } from "react"
 import { useTheme } from "@mui/material/styles"
 
 import useSWR from "swr"
-import BasicToast, { useToast } from "../ui/toasts/basicToast"
 import generateDailyCashPosition from "../../lib/generateDailyCashPosition"
 import { MonthData } from "../../types"
 import getDaysInMonth from "../../lib/dates/getDaysInMonth"
 
 import type { Account, Transaction } from '../../types'
-import type { ChartData, ChartDataset } from "chart.js"
+
+export type ChartDataPoint = {
+  day: number,
+  [accountId: string]: number,
+}
 
 export default function useGraphData ( month: string, activeAccounts: string[] ): { 
-  data: ChartData<'line'>, 
+  data: ChartDataPoint[], 
   error: boolean,
   loading: boolean,
 } {
@@ -19,13 +22,7 @@ export default function useGraphData ( month: string, activeAccounts: string[] )
 
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [xAxisLabels, setXAxisLabels] = useState<number[]>([])
-  const [data, setData] = useState<ChartData<'line'>>({
-    labels: [],
-    datasets: [{
-      data: [0],
-    }]
-  })
+  const [data, setData] = useState<ChartDataPoint[]>([])
 
   //Get user data
   const { data: transactions, error: transactionsError } = useSWR<Transaction[]>(`/api/transactions/getTransactions/${month}`)
@@ -38,78 +35,57 @@ export default function useGraphData ( month: string, activeAccounts: string[] )
     else setError(false)
   }, [accountsError, monthError, setError, transactionsError])
 
-  //Setup date labels
-  useEffect(() => {
-    setXAxisLabels([...Array(getDaysInMonth(month) + 1).keys()])
-  }, [month])
-
-  
-
   //Setup graph data for each account
+  // useEffect(() => {
+  //   if (accounts && transactions && monthData && monthData !== undefined && !error) {
+  //     const getDataset: (account: Account) => ChartDataset<'line'> = (account: Account) => {
+  //       return {
+  //         label: account.title,
+  //         borderColor: account.color,
+  //         fill: {
+  //           target: 'origin',
+  //           //TODO: Figure out fill and overall graph styling
+  //           // above: theme.palette.primary.light,
+  //           below: (account.type === 'checking') ? theme.palette.tertiary.dark : undefined,
+  //         },
+  //         normalized: true,
+  //         pointHitRadius: 10,
+  //         pointHoverRadius: (context: { dataIndex: any; dataset: { data: any[] } }) => {
+  //           const index = context.dataIndex
+  //           const amount = context.dataset.data[index]
+  //           const lastDayAmount = context.dataset.data[index-1]
+            
+  //           if (amount === lastDayAmount) return 4
+  //           else return 8
+  //         }
+  //       }
+  //     }
   useEffect(() => {
-    if (accounts !== undefined && transactions !== undefined && monthData && monthData !== undefined && !error) {
-      const getDataset: (account: Account) => ChartDataset<'line'> = (account: Account) => {
-        return {
-          label: account.title,
-          borderColor: account.color,
-          borderWidth: 3,
-          cubicInterpolationMode: "monotone",
-          fill: {
-            target: 'origin',
-            //TODO: Figure out fill and overall graph styling
-            // above: theme.palette.primary.light,
-            below: (account.type === 'checking') ? theme.palette.tertiary.dark : undefined,
-          },
-          normalized: true,
-          pointHitRadius: 10,
-          data: generateDailyCashPosition(
-            transactions.filter(transaction => {
-              return transaction.account === account._id
-            }), monthData
-          ).map(dailyAmount => {
-            return dailyAmount.getAmount()
-          }),
-          pointBackgroundColor: (context: { dataIndex: any; dataset: { data: any[] } }) => {
-            const index = context.dataIndex
-            const amount = context.dataset.data[index]
-            const lastDayAmount = context.dataset.data[index-1]
-            
-            if (amount > lastDayAmount) return theme.palette.primary.main
-            else if (amount === lastDayAmount) return 'black'
-            else return theme.palette.tertiary.light
-          },
-          pointRadius: (context: { dataIndex: any; dataset: { data: any[] } }) => {
-            const index = context.dataIndex
-            const amount = context.dataset.data[index]
-            const lastDayAmount = context.dataset.data[index-1]
-            
-            if (amount === lastDayAmount) return 0
-            else return 4
-          },
-          pointHoverRadius: (context: { dataIndex: any; dataset: { data: any[] } }) => {
-            const index = context.dataIndex
-            const amount = context.dataset.data[index]
-            const lastDayAmount = context.dataset.data[index-1]
-            
-            if (amount === lastDayAmount) return 4
-            else return 8
-          }
-        }
+    if (accounts && transactions && monthData && monthData !== undefined && !error) {    
+      //Setup empty days in month
+      const dataToGraph: ChartDataPoint[] = []
+      for ( let i = 0; i < getDaysInMonth(month); i++) {
+        const dataPoint: ChartDataPoint = { day: i }
       }
       
-      const dataToGraph: ChartData<'line'> = {
-        labels: xAxisLabels,
-        datasets: accounts.filter(account => activeAccounts.includes(account._id.toString()))
-        .map(account => {
-          return getDataset(account)
+      //For each active account, generate the array of daily cash position
+      accounts.filter(account => activeAccounts.includes(account._id.toString()))
+      .forEach(account => {
+        generateDailyCashPosition(
+          transactions.filter(transaction => {
+            return transaction.account === account._id
+          }), monthData
+        )
+        //For each day in an accounts cash position, add that account and amount to the output array
+        .forEach((dailyAmount, index) => {
+          dataToGraph[index] = { ...dataToGraph[index], [account._id.toString()]: dailyAmount.getAmount() }
         })
-          
-      }
-
+      })
+      
       setData(dataToGraph) 
       setLoading(false)
     }
-  }, [accounts, activeAccounts, error, month, monthData, theme.palette, transactions, xAxisLabels])
+  }, [accounts, activeAccounts, error, month, monthData, theme.palette, transactions])
 
   return { data: data, error: error, loading: loading }
 }

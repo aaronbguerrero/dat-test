@@ -1,24 +1,21 @@
-import { Line } from "react-chartjs-2"
-import { Chart as ChartJS, CategoryScale, Legend, LinearScale, PointElement, LineElement, Tooltip, Filler, ChartData } from "chart.js"
-import annotationPlugin from 'chartjs-plugin-annotation'
+import { LineChart, AreaChart, Line, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, Area, Dot } from 'recharts'
+// import { Chart as ChartJS, CategoryScale, Legend, LinearScale, PointElement, LineElement, Tooltip, Filler, ChartData } from "chart.js"
 import useGraphData from "./useGraphData"
 import ChartOptions from "./chartOptions"
 import BasicToast, { useToast } from "../ui/toasts/basicToast"
 
-import useChartTooltips from "../../lib/useChartTooltips"
-import { Box, CircularProgress, Paper } from "@mui/material"
+import { Box, CircularProgress, Paper, useTheme } from "@mui/material"
 import { useSession } from "next-auth/react"
 import React, { useEffect, useState } from 'react'
 import AccountsButtons from '../ui/buttons/accountsButtons'
+import { url } from 'inspector'
 
 export default function Chart ({ month }: { month: string }) {
+  const errorMessage = "Sorry! There was a problem loading some of the graph data. Please refresh the page."
   const { data: session } = useSession()
   
   const toast = useToast()
-
-  //Setup Chart.JS
-  ChartJS.register(annotationPlugin, CategoryScale, Legend, LinearScale, PointElement, LineElement, Tooltip, Filler)
-  useChartTooltips(month)
+  const theme = useTheme()
   
   //Setup active accounts control
   const [activeAccounts, setActiveAccounts] = useState<string[]>([]) 
@@ -29,8 +26,8 @@ export default function Chart ({ month }: { month: string }) {
   //Setup graph data
   const { data: graphData, error: graphError, loading: graphLoading } = useGraphData(month, activeAccounts)
   useEffect(() => {
-    if (graphError) toast.open("Sorry! There was a problem loading some of the graph data. Please refresh the page.", 'error')
-    else if (toast.content === "Sorry! There was a problem loading some of the graph data. Please refresh the page.") toast.close()
+    if (graphError) toast.open(errorMessage, 'error')
+    else if (toast.content === errorMessage) toast.close()
   }, [graphError, toast])
 
   const chartOptions = ChartOptions(month, session?.user?.currencyUsed || 'USD')
@@ -53,12 +50,50 @@ export default function Chart ({ month }: { month: string }) {
         <>
           <AccountsButtons onChange={handleAccountsChange} orientation='vertical' exclusive />
 
-          <Box sx={{ minHeight: '15rem', height: '99%', width: '99%', position: 'relative', overflow: 'hidden' }}>
-            <Line 
-            data={graphData}  
-            options={chartOptions}
-            />
-          </Box>
+          <ResponsiveContainer minHeight={'15rem'}>
+            <AreaChart dataKey={JSON.stringify(graphData)} data={graphData}>
+              <defs>
+                <linearGradient id="fillColor" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="white" stopOpacity={1} />
+                  <stop offset="100%" stopColor="red" stopOpacity={1} />
+                </linearGradient>
+              </defs>
+              
+              <CartesianGrid stroke="#ddd" />
+
+              {activeAccounts.map(account => {
+                return (
+                  <Area 
+                  type='bump' 
+                  dataKey={account} 
+                  stroke="red" 
+                  strokeWidth={2}
+                  fill={"url(#fillColor)"}
+                  dot={({ cx, cy, index }) => {
+                    const amount = graphData[index][account]
+                    const lastDayAmount = (index > 0) ? graphData[index-1][account] : 0
+
+                    let color = 'black'
+                    if (amount > lastDayAmount) color = theme.palette.primary.main
+                    else if (amount < lastDayAmount) color = theme.palette.tertiary.light
+
+                    return <Dot 
+                    cx={cx} 
+                    cy={cy} 
+                    r={(amount === lastDayAmount) ? 0 : 4} 
+                    stroke={'red'} 
+                    fill={color} 
+                    />
+                  }}
+                  //TODO: account color
+                  />
+                )
+              })}
+
+              <XAxis />
+              <YAxis />
+            </AreaChart>
+          </ResponsiveContainer>
         </>
       } 
 
