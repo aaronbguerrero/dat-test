@@ -6,7 +6,8 @@ import {
   ResponsiveContainer, 
   Area, 
   Dot, 
-  ReferenceLine 
+  ReferenceLine, 
+  Tooltip
 } from 'recharts'
 import useGraphData from "./useGraphData"
 import BasicToast, { useToast } from "../ui/toasts/basicToast"
@@ -16,6 +17,7 @@ import { useSession } from "next-auth/react"
 import React, { useEffect, useState } from 'react'
 import AccountsButtons from '../ui/buttons/accountsButtons'
 import toPrettyDayOfWeekString from '../../lib/dates/toPrettyDayOfWeekString'
+import useChartTooltips from './useChartTooltip'
 
 export default function Chart ({ month }: { month: string }) {
   const errorMessage = "Sorry! There was a problem loading some of the graph data. Please refresh the page."
@@ -46,6 +48,9 @@ export default function Chart ({ month }: { month: string }) {
     else if (toast.content === errorMessage) toast.close()
   }, [graphError, toast])
 
+  //Setup tooltips
+  const { tooltipsContent } = useChartTooltips(month)
+
   return (
     <Paper sx={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden', }}>
       { graphLoading &&
@@ -72,7 +77,7 @@ export default function Chart ({ month }: { month: string }) {
             > 
               <defs>
                 <linearGradient id="fillColor" x1="0" y1=".5" x2="0" y2="1">
-                  <stop offset="0%" stopColor="white" stopOpacity={1} />
+                  <stop offset="0%" stopColor="black" stopOpacity={.5} />
                   <stop offset="100%" stopColor="red" stopOpacity={1} />
                 </linearGradient>
               </defs>
@@ -81,6 +86,7 @@ export default function Chart ({ month }: { month: string }) {
             
               <ReferenceLine y={0} stroke="black" />
 
+              {/* Render account balance */}
               {activeAccounts.map(account => {
                 return (
                   <Area 
@@ -90,6 +96,31 @@ export default function Chart ({ month }: { month: string }) {
                   stroke="red" 
                   strokeWidth={2}
                   fill={"url(#fillColor)"}
+                  //TODO: account color
+                  />
+                )
+              })}
+
+              {/* Today's reference line, hide if not in month */}
+              {
+                (today !== 0) &&
+                <ReferenceLine 
+                x={1} 
+                stroke={theme.palette.secondary.main}
+                strokeWidth={2}
+                label={{ value: "Today", position: "insideTopRight", fontSize: '0.6rem', fill: theme.palette.secondary.dark }} 
+                />
+              }
+
+              {/* Render daily dots */}
+              {activeAccounts.map(account => {
+                return (
+                  <Area 
+                  key={account}
+                  type='bump' 
+                  dataKey={account} 
+                  stroke="none" 
+                  fill="none"
                   dot={({ cx, cy, index }) => {
                     const amount = graphData[index][account]
                     const lastDayAmount = (index > 0) ? graphData[index-1][account] : 0
@@ -106,21 +137,11 @@ export default function Chart ({ month }: { month: string }) {
                     fill={color} 
                     />
                   }}
-                  //TODO: account color
                   />
                 )
               })}
 
-              {/* Today's reference line, hide if not in month */}
-              {
-                (today !== 0) &&
-                <ReferenceLine 
-                x={15} 
-                stroke={theme.palette.secondary.main}
-                strokeWidth={2}
-                label={{ value: "Today", position: "top", fontSize: '0.6rem', fill: theme.palette.secondary.dark }} 
-                />
-              }
+              <Tooltip content={tooltipsContent} />
 
               <XAxis 
               tickFormatter={value => {
