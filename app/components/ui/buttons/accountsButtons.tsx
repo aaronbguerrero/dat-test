@@ -37,8 +37,8 @@ export default function AccountsButtons ({ onChange, exclusive, orientation }: P
   }
   }, [accounts, exclusive])
   
-  const handleAccountsChange = (event: React.MouseEvent<HTMLElement>, newAccounts: string[]) => {
-    if (newAccounts) setActiveAccounts(newAccounts)
+  const handleAccountsChange = (event: React.MouseEvent<HTMLElement>, newAccounts: string | string[]) => {
+    if (newAccounts) setActiveAccounts(Array.isArray(newAccounts) ? newAccounts : [newAccounts])
   }
   
   useEffect(() => {
