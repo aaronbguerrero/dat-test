@@ -1,14 +1,21 @@
-import { LineChart, AreaChart, Line, XAxis, YAxis, CartesianGrid, Legend, ResponsiveContainer, Area, Dot } from 'recharts'
-// import { Chart as ChartJS, CategoryScale, Legend, LinearScale, PointElement, LineElement, Tooltip, Filler, ChartData } from "chart.js"
+import { 
+  AreaChart, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  ResponsiveContainer, 
+  Area, 
+  Dot, 
+  ReferenceLine 
+} from 'recharts'
 import useGraphData from "./useGraphData"
-import ChartOptions from "./chartOptions"
 import BasicToast, { useToast } from "../ui/toasts/basicToast"
-
+import Dinero from 'dinero.js'
 import { Box, CircularProgress, Paper, useTheme } from "@mui/material"
 import { useSession } from "next-auth/react"
 import React, { useEffect, useState } from 'react'
 import AccountsButtons from '../ui/buttons/accountsButtons'
-import { url } from 'inspector'
+import toPrettyDayOfWeekString from '../../lib/dates/toPrettyDayOfWeekString'
 
 export default function Chart ({ month }: { month: string }) {
   const errorMessage = "Sorry! There was a problem loading some of the graph data. Please refresh the page."
@@ -16,6 +23,15 @@ export default function Chart ({ month }: { month: string }) {
   
   const toast = useToast()
   const theme = useTheme()
+
+  //Setup and track today
+  const [today, setToday] = useState(0)
+  useEffect(() => {
+    const todaysDate = new Date()
+    const currentMonth = new Date(month).getUTCMonth()
+    if (todaysDate.getUTCMonth() === currentMonth) setToday(todaysDate.getDate())
+    else setToday(0)
+  }, [month])
   
   //Setup active accounts control
   const [activeAccounts, setActiveAccounts] = useState<string[]>([]) 
@@ -30,8 +46,6 @@ export default function Chart ({ month }: { month: string }) {
     else if (toast.content === errorMessage) toast.close()
   }, [graphError, toast])
 
-  const chartOptions = ChartOptions(month, session?.user?.currencyUsed || 'USD')
-  
   return (
     <Paper sx={{ display: 'flex', height: '100%', width: '100%', overflow: 'hidden', }}>
       { graphLoading &&
@@ -50,20 +64,27 @@ export default function Chart ({ month }: { month: string }) {
         <>
           <AccountsButtons onChange={handleAccountsChange} orientation='vertical' exclusive />
 
-          <ResponsiveContainer minHeight={'15rem'}>
-            <AreaChart dataKey={JSON.stringify(graphData)} data={graphData}>
+          <ResponsiveContainer minHeight={'20rem'}>
+            <AreaChart 
+            dataKey={JSON.stringify(graphData)} 
+            data={graphData} 
+            margin={{ top: 15, left: 15, right: 15, bottom: 50 }}
+            > 
               <defs>
-                <linearGradient id="fillColor" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="fillColor" x1="0" y1=".5" x2="0" y2="1">
                   <stop offset="0%" stopColor="white" stopOpacity={1} />
                   <stop offset="100%" stopColor="red" stopOpacity={1} />
                 </linearGradient>
               </defs>
               
               <CartesianGrid stroke="#ddd" />
+            
+              <ReferenceLine y={0} stroke="black" />
 
               {activeAccounts.map(account => {
                 return (
                   <Area 
+                  key={account}
                   type='bump' 
                   dataKey={account} 
                   stroke="red" 
@@ -90,8 +111,49 @@ export default function Chart ({ month }: { month: string }) {
                 )
               })}
 
-              <XAxis />
-              <YAxis />
+              {/* Today's reference line, hide if not in month */}
+              {
+                (today !== 0) &&
+                <ReferenceLine 
+                x={15} 
+                stroke={theme.palette.secondary.main}
+                strokeWidth={2}
+                label={{ value: "Today", position: "top", fontSize: '0.6rem', fill: theme.palette.secondary.dark }} 
+                />
+              }
+
+              <XAxis 
+              tickFormatter={value => {
+                if (value === 0)  return 'Starting'
+
+                const date = new Date(month)
+                date.setUTCDate(value)
+                
+                return toPrettyDayOfWeekString(date)
+              }} 
+              angle={-50}
+              textAnchor="end"
+              interval={0}
+              tick={{ fontSize: '.75rem' }}
+              // fontSize={12}
+              />
+
+              <YAxis 
+              tickFormatter={value => {
+                if (session?.user?.currencyUsed) {
+                  const amount = Dinero({ 
+                    amount: value, 
+                    currency: session.user.currencyUsed, 
+                  })
+                  .toFormat('$0,0')
+    
+                  return amount
+                }
+
+                return value
+              }} 
+              tick={{ fontSize: '.75rem' }}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </>
