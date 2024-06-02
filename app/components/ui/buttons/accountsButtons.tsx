@@ -11,7 +11,7 @@ type Props = Omit<ToggleButtonGroupProps, 'onChange'> & {
   onChange: (activeAccounts: string[]) => void,
 }
 
-export default function AccountsButtons ({ onChange, exclusive, orientation }: Props) {
+export default function AccountsButtons ({ onChange, exclusive, orientation, sx }: Props) {
   const toast = useToast()
   
   const { data: accounts, error: accountsError } = useSWR<Account[]>(`/api/accounts/getAccounts`)
@@ -46,29 +46,29 @@ export default function AccountsButtons ({ onChange, exclusive, orientation }: P
   }, [activeAccounts, onChange])
 
   return (
-    <Box padding='1rem'>
-        <ToggleButtonGroup 
-        value={activeAccounts}
-        onChange={handleAccountsChange}
-        orientation={orientation}
-        exclusive={exclusive}
-        size='small'
-        >
-          {accounts?.map(account => {
-            return (
-              <ToggleButton
-              value={account._id.toString()}
-              key={account._id.toString()}
-              >
-                <Tooltip title={account.title} placement='right'>
-                  <Typography color={account.color}><AccountIcon type={account.type} /></Typography>
-                </Tooltip>
-              </ToggleButton>
-            )
-          })}
-        </ToggleButtonGroup>
-
-        <BasicToast {...toast} />
-      </Box>
+    <ToggleButtonGroup 
+    value={activeAccounts}
+    onChange={handleAccountsChange}
+    orientation={orientation}
+    exclusive={exclusive}
+    size='small'
+    sx={sx}
+    >
+      {accounts?.map(account => {
+        return (
+          <ToggleButton
+          value={account._id.toString()}
+          key={account._id.toString()}
+          sx={{ borderRadius: '5%' }}
+          >
+            <Tooltip title={account.title} placement='right'>
+              <Typography color={account.color}><AccountIcon type={account.type} /></Typography>
+            </Tooltip>
+          </ToggleButton>
+        )
+      })}
+      
+      <BasicToast {...toast} />
+    </ToggleButtonGroup>
   )
 }
