@@ -1,5 +1,4 @@
-import { ClickAwayListener, TextField, TextFieldProps } from "@mui/material"
-import { ChangeEvent, useEffect, useState } from "react"
+import { ChangeEvent, useState } from "react"
 import InlineEditButton from "../buttons/inlineEditButton"
 
 import { z } from 'zod'
@@ -27,44 +26,25 @@ export default function EditableInputField ({
   variant, 
   type, 
   disabled, 
-  isEditingFlag 
+  isEditingFlag,
 }: Props) {
   
-  const [errorState, setErrorState] = useState<boolean>(false)
-  const [helperText, setHelperText] = useState('')
-
   const handleSubmit = (value: string) => {
     return onSubmit(value, id)
   }
 
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setErrorState(false)
-    
-    //If schema, validate input
-    if (schema) {
-      const parseResult = schema.safeParse(event.target.value)
-
-      if (parseResult.success === false) {
-        setHelperText(parseResult.error.issues[0].message)
-        setErrorState(true)
+    onChange(event.target.value)
       }
 
-      else {
-        setErrorState(false)
-        setHelperText('')
-
-        onChange(parseResult.data as string)
-      }
-    }
-
-    else onChange(event.target.value)
-  }
+  const [clearErrors, setClearErrors] = useState(false)
 
   const handleIsEditingFlag = (isEditing: boolean) => {
     if (isEditing === false) {
-      setErrorState(false)
-      setHelperText('')
+      setClearErrors(true)
     }
+
+    else setClearErrors(false)
 
     if (isEditingFlag) isEditingFlag(isEditing)
   }
@@ -90,6 +70,7 @@ export default function EditableInputField ({
       {/* <ClickAwayListener onClickAway={onClickAway}> */}
         <InputField 
         id={id}
+      schema={schema}
         fullWidth
         label={label} 
         variant={variant || 'outlined'}
@@ -97,18 +78,17 @@ export default function EditableInputField ({
         disabled={!isEditable} 
         value={internalValue}
         onChange={handleChange}
+      clearErrors={clearErrors}
         InputProps={{
           endAdornment: (editable !== false) && 
           <InlineEditButton 
+        key={id}
           isLoading={isLoading} 
           isEditable={isEditable} 
           onClick={onEditButtonClick}
           disabled={disabled}
           />
         }}
-        //TODO: Pass in error state and helper text?? (override internal)
-        errorState={errorState} 
-        helperText={helperText}
         />
       {/* </ClickAwayListener> */}
     </form>
