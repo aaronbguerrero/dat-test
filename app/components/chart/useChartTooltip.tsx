@@ -32,9 +32,18 @@ export default function useChartTooltips (month: string) {
       }
 
       return (
-        <Box border="solid blue 1px" sx={{ backgroundColor: 'red', padding: '1rem'}}>
-          <h4>{date}</h4>
-          <h5>
+        <Box sx={{ 
+          backgroundColor: 'rgba(0,0,0,0.8)', 
+          padding: '0.5rem', 
+          color: 'white',
+          borderRadius: '5%',
+          }}>
+          <span style={{ fontSize: '0.9rem', fontWeight: 200 }}>{date}</span>
+
+          <br />
+
+          <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>
+            Balance:&nbsp;
             {
               Dinero({ 
               amount: payload ? payload[0].value: 0, 
@@ -42,14 +51,28 @@ export default function useChartTooltips (month: string) {
               })
               .toFormat()
             }
-            </h5>
-          <ul>
-            {transactionsToRender.map((transaction, index) => {
-              return (
-                <li key={index}>{transaction}</li>
-              )
-            })}
-          </ul>
+          </span> 
+
+          {
+            (transactionsToRender.length >= 1) &&
+
+            <>
+              <hr />
+
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, }}>
+                {transactionsToRender.map((transaction, index) => {
+                  return (
+                    <li key={index}>
+                      <span style={{ fontSize: '0.75rem' }}>
+                        {transaction}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </>
+          }
+
 
         </Box>
       )
