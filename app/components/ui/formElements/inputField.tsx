@@ -52,10 +52,12 @@ export default function InputField ({
         setInternalHelperText('')
 
         if (onChange) onChange(event)
+        else setInternalValue(parseResult.data)
       }
     }
 
     else if (onChange) onChange(event)
+    else setInternalValue(event.target.value)
   }
   
   //If value in props changes, apply to internal state
