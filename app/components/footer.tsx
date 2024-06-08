@@ -15,7 +15,7 @@ export default function Footer () {
         overflow: 'visible',
       }}>
         <Typography color='secondary'>
-          &copy; 2023 &nbsp;
+          &copy; {new Date().getUTCFullYear()} &nbsp;
           <Link 
           style={{ color: theme.palette.secondary.main, textDecoration: 'none' }}
           href={'mailto:aaronbguerrero@gmail.com?subject=Struggle Planner Inquiry'} 
