@@ -382,7 +382,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
 
         setTransaction(response.value)
 
-        mutate(`/api/transactions/getTransactions/${toMonthString(new Date(transaction.date))}`)
+        mutate(`/api/transactions/getTransactions/${monthString}`)
 
         setMonthData(monthString)
         .then(response => {
@@ -454,7 +454,8 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
     newValue: string, 
     property: string | undefined
   ) => {
-    if (property === undefined) {
+    //TODO: Need to handle if date is in another month!
+    if (property === undefined || !transaction) {
       toast.open('Sorry! There was a problem updating the transaction. Please try again.', 'error')
       return false
     }
@@ -464,6 +465,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
 
     if (property === 'amount') value = removeCurrencyFormat(newValue).toString()
 
+    
     //If transaction is recurring, edit recurrence
     if (isRecurring) {
       recurEditDialog.open(transaction, value, property)
@@ -473,7 +475,7 @@ export function useEditTransactionDialog(mutate: (key: string) => void, transact
     //If not, just edit transaction
     else {
       const response = await handleUpdateTransaction(value, property)
-
+      
       if (response.ok === 1) return true
       else return false
     }

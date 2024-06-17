@@ -1,12 +1,10 @@
 'use client'
 
-import { CreditCardTwoTone } from "@mui/icons-material"
-import { Box, Divider, Paper, Tab, Table, TableBody, TableCell, TableRow, Tabs, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material"
+import { Divider, Paper, Table, TableBody, TableCell, TableRow } from "@mui/material"
 import Dinero, { Currency } from "dinero.js"
 import { useSession } from "next-auth/react"
 import React, { useEffect, useState } from "react"
 import useSWR, { useSWRConfig } from 'swr'
-import { z } from 'zod'
 
 import type { MonthData } from "../types"
 import getCurrentMonth from "../lib/dates/getCurrentMonth"
@@ -33,6 +31,12 @@ export default function InfoPanel ({ month }: Props) {
     }
   }, [session])
 
+  //Error and success messages
+  const monthDataErrorMessage = "Sorry! There was a problem loading the month data. Please refresh the page."
+  const startingAmountErrorMessage = "Sorry! There was a problem updating the starting amount. Please try again!"
+  const endingAmountErrorMessage = "Sorry! There was a problem updating the ending amount. Please refresh the page."
+  const startingAmountSuccessMessage = "Starting amount updated successfully!"
+
   const { mutate } = useSWRConfig()
 
   const [isFuture, setIsFuture] = useState(false)
@@ -53,14 +57,14 @@ export default function InfoPanel ({ month }: Props) {
   
   useEffect(() => {
     if (monthDataError || lastMonthEndingAmountError) {
-      toast.open("Sorry! There was a problem loading the month data. Please refresh the page.", 'error')
+      toast.open(monthDataErrorMessage, 'error')
     }
-    else if (toast.content === "Sorry! There was a problem loading the month data. Please refresh the page.") toast.close()
+    else if (toast.content === monthDataErrorMessage) toast.close()
   }, [monthDataError, lastMonthEndingAmountError, toast])
   
   const handleStartingAmountSubmit = async (newValue: string): Promise<boolean> => {
     if (!monthData) {
-      toast.open("Sorry! There was a problem updating the starting amount. Please try again!", 'error')
+      toast.open(startingAmountErrorMessage, 'error')
       
       return false
     }
@@ -79,6 +83,7 @@ export default function InfoPanel ({ month }: Props) {
     })
     .then(response => response.json())
     .then(async response => {
+      //TODO: Move this to API
       if (response === true) {
         const response = await fetch(`/api/months/updateMonthData/`, {
           method: 'PATCH',
@@ -96,8 +101,8 @@ export default function InfoPanel ({ month }: Props) {
           if (response === true) {
             setMonthData(monthData.month || "")
             .then(response => {
-              if (response === true) toast.open("Starting amount updated successfully!", 'success')
-              else toast.open("Sorry! There was a problem updating the ending amount. Please refresh the page.", 'error')
+              if (response === true) toast.open(startingAmountSuccessMessage, 'success')
+              else toast.open(endingAmountErrorMessage, 'error')
 
               mutate(`/api/months/getMonthData/${toMonthString(month)}`)
             })
@@ -106,7 +111,7 @@ export default function InfoPanel ({ month }: Props) {
             return true
           }
           else {
-            toast.open("Sorry! There was a problem updating the starting amount. Please try again!", 'error')
+            toast.open(startingAmountErrorMessage, 'error')
             return false
           }
         })
@@ -115,7 +120,7 @@ export default function InfoPanel ({ month }: Props) {
       }
       
       else {
-        toast.open("Sorry! There was a problem updating the starting amount. Please try again!", 'error')
+        toast.open(startingAmountErrorMessage, 'error')
         return false
       }
     })
@@ -173,7 +178,7 @@ export default function InfoPanel ({ month }: Props) {
 
           <TableRow>
             <TableCell>Total Income</TableCell>
-            <TableCell align="right">
+            <TableCell align="right" sx={{ minWidth: '6rem', }}>
               {Dinero({ 
                 amount: removeCurrencyFormat(monthData?.totalIncome.amount.toString() || ''), 
                 currency: currencyUsed }).toFormat()
@@ -192,7 +197,7 @@ export default function InfoPanel ({ month }: Props) {
           </TableRow>
 
           <TableRow>
-            <TableCell>Balance at End of Month</TableCell>
+            <TableCell>Month End</TableCell>
             <TableCell align="right">
               {Dinero({ 
                 amount: removeCurrencyFormat(monthData?.endingAmount.amount.toString() || ''), 
