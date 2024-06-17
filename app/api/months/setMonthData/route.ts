@@ -47,7 +47,7 @@ export async function PUT(request: NextRequest) {
     })
     
     if (!monthData) return NextResponse.json(false)
-
+    
     const transactions = await getTransactions(db, session, date)
 
     //Calculate and return month data

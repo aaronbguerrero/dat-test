@@ -39,9 +39,8 @@ export default async function calculateAndUpdateMonthData (
   //If there is no change, return true
   if (
     monthData.dailyBalance &&
-    dailyBalance.map((dailyAmount, index) => {
-      if (dailyAmount.getAmount() === monthData.dailyBalance[index]?.amount) return true
-      else return false
+    dailyBalance.every((dailyAmount, index) => {
+      return (dailyAmount.getAmount() === monthData.dailyBalance[index]?.amount)
     }) &&
     income.getAmount() === monthData.totalIncome?.amount &&
     expenses.getAmount() === monthData.totalExpenses?.amount &&
@@ -64,6 +63,6 @@ export default async function calculateAndUpdateMonthData (
     }}
   )
 
-  if (response.modifiedCount === 1) return NextResponse.json(true)
+  if (response.acknowledged) return NextResponse.json(true)
   else return NextResponse.json(false)
 }

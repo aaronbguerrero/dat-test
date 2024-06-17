@@ -130,17 +130,21 @@ export default function Calendar ({ month, setMonth }: Props) {
       })
     })
     .then(response => response.json())
-    .then(response => {
-      if (response.ok === 1) {
-        mutate(`/api/transactions/getTransactions/${month}`)
+    .then(async response => {
+      mutate(`/api/transactions/getTransactions/${month}`)
       
-        setMonthData(month || "")
-        
-        toast.open("Transaction(s) updated successfully!", 'success')
+      if (response.ok === 1) {
+        await setMonthData(month || "")
+        .then(response => {
+          if (response) {
+            mutate(`/api/months/getMonthData/${month}`)
+            
+            toast.open("Transaction(s) updated successfully!", 'success')
+          }
+          //TODO: Add else for error handling
+        })
       }
       else {
-        mutate(`/api/transactions/getTransactions/${month}`)
-
         eventToRevert?.revert()
         setEventToRevert(undefined)
         
@@ -171,12 +175,20 @@ export default function Calendar ({ month, setMonth }: Props) {
       })
     })
     .then(response => response.json())
-    .then(response => {
+    .then(async response => {
       if (response) {
         //TODO: Need to implement error on response
         mutate(`/api/transactions/getTransactions/${month}`)
         
-        toast.open("Transaction(s) updated successfully!", 'success')
+        await setMonthData(month || "")
+        .then(response => {
+          if (response) {
+            mutate(`/api/months/getMonthData/${month}`)
+            
+            toast.open("Transaction(s) updated successfully!", 'success')
+          }
+          //TODO: Add else for error handling
+        })
       }
 
       else {
