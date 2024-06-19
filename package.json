@@ -29,7 +29,7 @@
     "nextjs": "^0.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "recharts": "^2.12.7",
+    "recharts": "^2.13.0-alpha.4",
     "rrule": "^2.8.1",
     "swr": "^2.2.4",
     "zod": "^3.22.4"
@@ -40,6 +40,7 @@
     "@types/next": "^9.0.0",
     "@types/node": "20.12.12",
     "@types/react": "^18.2.55",
+    "@types/recharts": "^1.8.29",
     "nodemailer": "^6.9.9"
   }
 }
