@@ -21,7 +21,7 @@ export default function useChartTooltips (month: string) {
 
       const transactionsToRender: string[] = []
       
-      if (transactions && transactions.length > 0){
+      if (transactions && transactions.length > 0) {
         transactions.forEach(transaction => {
           const transactionDate = new Date(transaction.date).getUTCDate()
           if (transactionDate === label) {
@@ -29,53 +29,51 @@ export default function useChartTooltips (month: string) {
             transactionsToRender.push(`${transaction.title}: ${Dinero({ amount: transaction.amount.amount, currency: transaction.amount.currency }).toFormat()}`)
           }
         })
-      }
 
-      return (
-        <Box sx={{ 
-          backgroundColor: 'rgba(0,0,0,0.8)', 
-          padding: '0.5rem', 
-          color: 'white',
-          borderRadius: '5%',
-          }}>
-          <span style={{ fontSize: '0.9rem', fontWeight: 200 }}>{date}</span>
-
-          <br />
-
-          <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>
-            Balance:&nbsp;
+        return (
+          <Box sx={{ 
+            backgroundColor: 'rgba(0,0,0,0.8)', 
+            padding: '0.5rem', 
+            color: 'white',
+            borderRadius: '5%',
+            }}>
+            <span style={{ fontSize: '0.9rem', fontWeight: 200 }}>{date}</span>
+  
+            <br />
+  
+            <span style={{ fontSize: '0.8rem', fontWeight: 400 }}>
+              Balance:&nbsp;
+              {
+                Dinero({ 
+                amount: payload ? payload[0].value: 0, 
+                currency: transactions[0].amount.currency 
+                })
+                .toFormat()
+              }
+            </span> 
+  
             {
-              Dinero({ 
-              amount: payload ? payload[0].value: 0, 
-              currency: transactions[0].amount.currency 
-              })
-              .toFormat()
+              (transactionsToRender.length >= 1) &&
+  
+              <>
+                <hr />
+  
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, }}>
+                  {transactionsToRender.map((transaction, index) => {
+                    return (
+                      <li key={index}>
+                        <span style={{ fontSize: '0.75rem' }}>
+                          {transaction}
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </>
             }
-          </span> 
-
-          {
-            (transactionsToRender.length >= 1) &&
-
-            <>
-              <hr />
-
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, }}>
-                {transactionsToRender.map((transaction, index) => {
-                  return (
-                    <li key={index}>
-                      <span style={{ fontSize: '0.75rem' }}>
-                        {transaction}
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
-            </>
-          }
-
-
-        </Box>
-      )
+          </Box>
+        )
+      }
     }
 
     return null
